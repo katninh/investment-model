@@ -1,15 +1,16 @@
-import Link from 'next/link';
 import { getPortfolio } from '@/lib/data/portfolio';
 import { ASSET_LABEL } from '@/lib/data/conviction';
+import { Card, CardTitle, PageHeader } from '@/components/ui';
+import { DonutChart } from '@/components/charts/DonutChart';
 
 export const revalidate = 3600;
 
-const ASSET_COLOR: Record<string, string> = {
-  equities: 'bg-blue-500',
-  gold: 'bg-amber-500',
-  btc: 'bg-orange-500',
-  bonds: 'bg-purple-500',
-  cash: 'bg-zinc-400',
+const ASSET_HEX: Record<string, string> = {
+  equities: '#3b82f6',
+  gold: '#f59e0b',
+  btc: '#f97316',
+  bonds: '#a855f7',
+  cash: '#94a3b8',
 };
 
 export default async function PortfolioPage() {
@@ -17,65 +18,57 @@ export default async function PortfolioPage() {
   const funded = allocations.filter((a) => a.weight > 0.0005);
 
   return (
-    <main className="mx-auto max-w-3xl p-6">
-      <div className="mb-1 flex items-baseline justify-between">
-        <h1 className="text-2xl font-semibold">Portfolio</h1>
-        <Link href="/conviction" className="text-sm text-blue-600 hover:underline dark:text-blue-400">
-          Conviction →
-        </Link>
-      </div>
-      <p className="mb-6 text-sm text-zinc-500">
-        Layer 5 · target allocation from conviction · regime: {regime} · max 35%/asset, min 10% cash
-      </p>
+    <div className="animate-fade-up mx-auto max-w-4xl p-4 sm:p-6">
+      <PageHeader
+        title="Portfolio"
+        description={`Layer 5 · target allocation from conviction · regime: ${regime} · max 35%/asset, min 10% cash`}
+      />
 
-      {/* stacked allocation bar */}
-      <div className="mb-1 flex h-8 w-full overflow-hidden rounded">
-        {funded.map((a) => (
-          <div
-            key={a.asset}
-            className={`${ASSET_COLOR[a.asset] ?? 'bg-zinc-500'} flex items-center justify-center text-xs text-white`}
-            style={{ width: `${a.weight * 100}%` }}
-            title={`${ASSET_LABEL[a.asset] ?? a.asset} ${(a.weight * 100).toFixed(0)}%`}
-          >
-            {a.weight >= 0.08 ? `${Math.round(a.weight * 100)}%` : ''}
+      <div className="grid gap-6 lg:grid-cols-5">
+        <Card className="lg:col-span-2">
+          <CardTitle className="mb-1">Allocation</CardTitle>
+          <DonutChart
+            labels={funded.map((a) => ASSET_LABEL[a.asset] ?? a.asset)}
+            series={funded.map((a) => Math.round(a.weight * 100))}
+            colors={funded.map((a) => ASSET_HEX[a.asset] ?? '#94a3b8')}
+          />
+        </Card>
+
+        <Card className="lg:col-span-3 !p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-200 text-left text-gray-500 dark:border-gray-800">
+                  <th className="px-5 py-3 font-medium">Asset</th>
+                  <th className="px-3 py-3 text-right font-medium">Weight</th>
+                  <th className="px-5 py-3 font-medium">Rationale</th>
+                </tr>
+              </thead>
+              <tbody>
+                {allocations.map((a) => (
+                  <tr key={a.asset} className="border-b border-gray-100 last:border-0 dark:border-gray-800">
+                    <td className="flex items-center gap-2 px-5 py-3 font-medium text-gray-800 dark:text-white">
+                      <span
+                        className="inline-block h-2.5 w-2.5 rounded-full"
+                        style={{ background: ASSET_HEX[a.asset] ?? '#94a3b8' }}
+                      />
+                      {ASSET_LABEL[a.asset] ?? a.asset}
+                    </td>
+                    <td className="px-3 py-3 text-right font-semibold tabular-nums text-gray-800 dark:text-white">
+                      {(a.weight * 100).toFixed(1)}%
+                    </td>
+                    <td className="px-5 py-3 text-gray-500">{a.rationale}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        ))}
-      </div>
-      <div className="mb-6 flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-500">
-        {funded.map((a) => (
-          <span key={a.asset} className="flex items-center gap-1">
-            <span className={`inline-block h-2 w-2 rounded-full ${ASSET_COLOR[a.asset] ?? 'bg-zinc-500'}`} />
-            {ASSET_LABEL[a.asset] ?? a.asset}
-          </span>
-        ))}
+        </Card>
       </div>
 
-      <table className="w-full border-collapse text-sm">
-        <thead>
-          <tr className="border-b border-zinc-300 text-left text-zinc-500 dark:border-zinc-700">
-            <th className="py-2 pr-3 font-medium">Asset</th>
-            <th className="py-2 pr-3 text-right font-medium">Weight</th>
-            <th className="py-2 pr-3 text-right font-medium">Conviction</th>
-            <th className="py-2 pr-3 font-medium">Rationale</th>
-          </tr>
-        </thead>
-        <tbody>
-          {allocations.map((a) => (
-            <tr key={a.asset} className="border-b border-zinc-100 dark:border-zinc-800">
-              <td className="py-2 pr-3 font-medium">{ASSET_LABEL[a.asset] ?? a.asset}</td>
-              <td className="py-2 pr-3 text-right tabular-nums font-semibold">{(a.weight * 100).toFixed(1)}%</td>
-              <td className="py-2 pr-3 text-right tabular-nums text-zinc-500">
-                {a.asset === 'cash' ? '—' : `${a.conviction >= 0 ? '+' : ''}${a.conviction.toFixed(2)}`}
-              </td>
-              <td className="py-2 pr-3 text-zinc-600 dark:text-zinc-300">{a.rationale}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <p className="mt-4 text-xs text-zinc-400">
-        Target weights only — not advice. Deployment plan and drift tracking (§8.6) are later additions.
+      <p className="mt-4 text-xs text-gray-400">
+        Target weights only — not advice. Deployment plan and drift tracking are added with Portfolio inputs.
       </p>
-    </main>
+    </div>
   );
 }

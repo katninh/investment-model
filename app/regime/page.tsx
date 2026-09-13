@@ -1,11 +1,10 @@
-import Link from 'next/link';
 import { getRegimeCall } from '@/lib/data/regime';
 import { RegimeBanner } from '@/components/RegimeBanner';
+import { Card, CardTitle, PageHeader, Badge } from '@/components/ui';
 import type { IndicatorRow } from '@/lib/data/indicators';
 
 export const revalidate = 3600;
 
-// 2×2 grid order (top-left → bottom-right): inflation rising on top, growth strengthening on the right.
 const CELLS = [
   { regime: 'STAGFLATION', label: 'Stagflation', sub: 'growth ↓ · inflation ↑' },
   { regime: 'OVERHEAT', label: 'Overheat', sub: 'growth ↑ · inflation ↑' },
@@ -13,34 +12,25 @@ const CELLS = [
   { regime: 'RECOVERY', label: 'Recovery', sub: 'growth ↑ · inflation ↓' },
 ];
 
-function ContributorTable({ title, rows }: { title: string; rows: IndicatorRow[] }) {
+function ContributorCard({ title, rows }: { title: string; rows: IndicatorRow[] }) {
   return (
-    <div>
-      <h3 className="mb-2 text-sm font-semibold">{title}</h3>
-      <table className="w-full border-collapse text-sm">
-        <tbody>
-          {rows.map((r) => (
-            <tr key={r.id} className="border-b border-zinc-100 dark:border-zinc-800">
-              <td className="py-1.5 pr-3">{r.name}</td>
-              <td className="py-1.5 pr-3 text-right tabular-nums text-zinc-500">
-                z {r.signal!.zScore.toFixed(2)}
-              </td>
-              <td
-                className={`py-1.5 text-right font-medium ${
-                  r.signal!.signal > 0
-                    ? 'text-green-700 dark:text-green-400'
-                    : r.signal!.signal < 0
-                      ? 'text-red-700 dark:text-red-400'
-                      : 'text-zinc-500'
-                }`}
-              >
-                {r.signal!.signalLabel}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <Card>
+      <CardTitle className="mb-3 text-sm">{title}</CardTitle>
+      <ul className="space-y-2">
+        {rows.map((r) => {
+          const s = r.signal!.signal;
+          return (
+            <li key={r.id} className="flex items-center justify-between text-sm">
+              <span className="text-gray-600 dark:text-gray-300">{r.name}</span>
+              <span className="flex items-center gap-2">
+                <span className="tabular-nums text-xs text-gray-400">z {r.signal!.zScore.toFixed(2)}</span>
+                <Badge variant={s > 0 ? 'success' : s < 0 ? 'error' : 'neutral'}>{r.signal!.signalLabel}</Badge>
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </Card>
   );
 }
 
@@ -48,48 +38,44 @@ export default async function RegimePage() {
   const { call, growth, inflation } = await getRegimeCall();
 
   return (
-    <main className="mx-auto max-w-4xl p-6">
-      <div className="mb-1 flex items-baseline justify-between">
-        <h1 className="text-2xl font-semibold">Macro Regime</h1>
-        <Link href="/indicators" className="text-sm text-blue-600 hover:underline dark:text-blue-400">
-          Indicators →
-        </Link>
-      </div>
-      <p className="mb-6 text-sm text-zinc-500">Investment Clock — growth × inflation (Model 1)</p>
+    <div className="animate-fade-up mx-auto max-w-5xl p-4 sm:p-6">
+      <PageHeader title="Macro Regime" description="Investment Clock — growth × inflation (Model 1)" />
 
-      <RegimeBanner call={call} />
+      <Card>
+        <RegimeBanner call={call} />
+      </Card>
 
-      {/* 2×2 clock matrix */}
-      <div className="mt-8">
-        <div className="grid grid-cols-2 gap-2">
+      <Card className="mt-6">
+        <CardTitle className="mb-4">Investment Clock</CardTitle>
+        <div className="grid grid-cols-2 gap-3">
           {CELLS.map((c) => {
             const active = c.regime === call.regime;
             return (
               <div
                 key={c.regime}
-                className={`rounded-lg border p-4 ${
+                className={`rounded-xl border p-4 ${
                   active
-                    ? 'border-zinc-900 bg-zinc-900 text-white dark:border-white dark:bg-white dark:text-black'
-                    : 'border-zinc-200 text-zinc-500 dark:border-zinc-800'
+                    ? 'border-brand-500 bg-brand-50 dark:bg-brand-500/10'
+                    : 'border-gray-200 dark:border-gray-800'
                 }`}
               >
-                <div className="font-semibold">{c.label}</div>
-                <div className="text-xs opacity-70">{c.sub}</div>
+                <div className={`font-semibold ${active ? 'text-brand-600 dark:text-brand-300' : 'text-gray-500'}`}>
+                  {c.label}
+                </div>
+                <div className="text-xs text-gray-400">{c.sub}</div>
               </div>
             );
           })}
         </div>
-        <p className="mt-2 text-xs text-zinc-400">
+        <p className="mt-3 text-xs text-gray-400">
           Left→right: growth strengthening · Top→bottom: inflation easing
-          {call.regime === 'TRANSITION' ? ' — currently between regimes (one axis unclear)' : null}
         </p>
-      </div>
+      </Card>
 
-      {/* why trail */}
-      <div className="mt-8 grid gap-8 sm:grid-cols-2">
-        <ContributorTable title={`Growth signals (${growth.length})`} rows={growth} />
-        <ContributorTable title={`Inflation signals (${inflation.length})`} rows={inflation} />
+      <div className="mt-6 grid gap-6 sm:grid-cols-2">
+        <ContributorCard title={`Growth signals (${growth.length})`} rows={growth} />
+        <ContributorCard title={`Inflation signals (${inflation.length})`} rows={inflation} />
       </div>
-    </main>
+    </div>
   );
 }

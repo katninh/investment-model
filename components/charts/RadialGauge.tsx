@@ -8,13 +8,13 @@ export function RadialGauge({
   label,
   color = '#5750f1',
   height = 200,
-  format,
+  displayValue,
 }: {
   value: number; // 0..100
   label: string;
   color?: string;
   height?: number;
-  format?: (v: number) => string;
+  displayValue?: string; // serializable override for the center text
 }) {
   const options: ApexOptions = {
     chart: { fontFamily: 'inherit', sparkline: { enabled: false } },
@@ -31,7 +31,7 @@ export function RadialGauge({
             offsetY: -12,
             fontSize: '24px',
             fontWeight: 700,
-            formatter: (v) => (format ? format(Number(v)) : `${Math.round(Number(v))}%`),
+            formatter: (v) => displayValue ?? `${Math.round(Number(v))}%`,
           },
         },
       },

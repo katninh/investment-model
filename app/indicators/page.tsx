@@ -1,7 +1,7 @@
 import { getIndicatorSignals } from '@/lib/data/indicators';
 import { IndicatorsTable } from '@/components/IndicatorsTable';
+import { PageHeader } from '@/components/ui';
 
-// Data updates ~daily; cache the computed signals for an hour (§10 FCP target).
 export const revalidate = 3600;
 
 export default async function IndicatorsPage() {
@@ -9,12 +9,12 @@ export default async function IndicatorsPage() {
   const live = rows.filter((r) => r.signal != null).length;
 
   return (
-    <main className="mx-auto max-w-7xl p-6">
-      <h1 className="text-2xl font-semibold">Indicators</h1>
-      <p className="mt-1 mb-6 text-sm text-zinc-500">
-        {live} of {rows.length} live · Layer 2 signals (z-score, percentile, momentum; ±0.5σ direction)
-      </p>
+    <div className="animate-fade-up mx-auto max-w-7xl p-4 sm:p-6">
+      <PageHeader
+        title="Indicators"
+        description={`${live} of ${rows.length} live · Layer 2 signals (z-score, percentile, momentum; ±0.5σ direction)`}
+      />
       <IndicatorsTable rows={rows} />
-    </main>
+    </div>
   );
 }
