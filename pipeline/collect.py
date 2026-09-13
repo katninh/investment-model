@@ -15,6 +15,8 @@ from sources.fred import fetch_series
 from sources.twelvedata import fetch_time_series
 from sources.coingecko import fetch_market_chart
 from sources.alternative_me import fetch_fng
+from sources.cnn import fetch_fear_greed
+from sources.bitcoin_data import fetch_mvrv
 
 # Non-FRED indicator ownership (id -> provider symbol/param).
 TWELVEDATA_IDS = {"MKT_XAUUSD": "XAU/USD", "MKT_GLD": "GLD", "MKT_XLE": "XLE"}
@@ -86,7 +88,20 @@ def collect_crypto(conn, mode):
 
 def collect_sentiment(conn, mode):
     limit = 0 if mode == "full" else 90  # 0 = full history (alternative.me)
-    return _run_series(conn, "SENT_CRYPTO_FG", lambda: fetch_fng(limit))[:2]
+    ok = err = 0
+    for indicator_id, fetch in [
+        ("SENT_CRYPTO_FG", lambda: fetch_fng(limit)),
+        ("SENT_CNN_FG", fetch_fear_greed),  # best-effort; ~1yr history regardless of mode
+    ]:
+        o, e, _ = _run_series(conn, indicator_id, fetch)
+        ok += o
+        err += e
+    return ok, err
+
+
+def collect_valuation(conn, mode):
+    # BTC MVRV (bitcoin-data.com); free tier is delayed ~7 days.
+    return _run_series(conn, "VAL_BTC_MVRV", fetch_mvrv)[:2]
 
 
 # (source_name, fn, modes it runs in)
@@ -95,6 +110,7 @@ SOURCES = [
     ("prices", collect_prices, {"daily", "full"}),
     ("crypto", collect_crypto, {"daily", "full"}),
     ("sentiment", collect_sentiment, {"daily", "full"}),
+    ("valuation", collect_valuation, {"daily", "full"}),
 ]
 
 
