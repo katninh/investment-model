@@ -122,6 +122,13 @@ export const ingestionLog = pgTable('ingestion_log', {
   runAt: timestamp('run_at', { withTimezone: true }).defaultNow(),
 });
 
+// Single-user app config (model weights, thresholds, constraints) — key/JSONB
+export const appConfig = pgTable('app_config', {
+  key: text('key').primaryKey(),
+  value: jsonb('value').notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
 // Manual data entry + assumptions
 export const manualInputs = pgTable('manual_inputs', {
   id: bigserial('id', { mode: 'number' }).primaryKey(),

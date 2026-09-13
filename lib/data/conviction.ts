@@ -4,7 +4,8 @@ import { getSentiment, type SentimentResult } from './sentiment';
 import { getMomentum, type AssetMomentum } from './momentum';
 import { getScenarios, type ScenariosResult } from './scenarios';
 import type { AssetValuation } from '@/lib/model/valuation';
-import { conviction, REGIME_FIT, type ConvictionResult } from '@/lib/model/conviction';
+import { conviction, REGIME_FIT, type ConvictionResult, type ConvictionInputs } from '@/lib/model/conviction';
+import { getSettings, normalizedWeights } from './config';
 
 const ASSETS = ['equities', 'gold', 'btc', 'bonds'] as const;
 type Asset = (typeof ASSETS)[number];
@@ -23,6 +24,7 @@ export const ASSET_LABEL: Record<string, string> = {
 export interface ConvictionData {
   results: ConvictionResult[];
   regime: string;
+  weights: ConvictionInputs; // normalized weights actually applied
   // full model outputs, so the brief composes from one fetch (existing consumers ignore this)
   models: {
     regime: RegimeResult;
@@ -34,13 +36,15 @@ export interface ConvictionData {
 }
 
 export async function getConviction(): Promise<ConvictionData> {
-  const [regime, valuation, sentiment, momentum, scenarios] = await Promise.all([
+  const [regime, valuation, sentiment, momentum, scenarios, settings] = await Promise.all([
     getRegimeCall(),
     getValuation(),
     getSentiment(),
     getMomentum(),
     getScenarios(),
+    getSettings(),
   ]);
+  const weights = normalizedWeights(settings.weights);
 
   const fit = REGIME_FIT[regime.call.regime];
 
@@ -63,18 +67,23 @@ export async function getConviction(): Promise<ConvictionData> {
   const evClamp = (x: number) => Math.max(-1, Math.min(1, x / 15));
 
   const results = ASSETS.map((asset) =>
-    conviction(asset, {
-      regimeFit: fit[asset] ?? 0,
-      valuation: valBy[asset] ?? 0,
-      sentiment: asset === 'bonds' ? 0 : sentScore,
-      momentum: momBy[asset] ?? 0,
-      scenarioEv: evClamp(scenarios.ev[asset] ?? 0),
-    }),
+    conviction(
+      asset,
+      {
+        regimeFit: fit[asset] ?? 0,
+        valuation: valBy[asset] ?? 0,
+        sentiment: asset === 'bonds' ? 0 : sentScore,
+        momentum: momBy[asset] ?? 0,
+        scenarioEv: evClamp(scenarios.ev[asset] ?? 0),
+      },
+      weights,
+    ),
   ).sort((a, b) => b.conviction - a.conviction);
 
   return {
     results,
     regime: regime.call.regime,
+    weights,
     models: { regime, valuation, sentiment, momentum, scenarios },
   };
 }

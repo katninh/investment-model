@@ -49,8 +49,12 @@ export function actionFor(c: number): Action {
   return 'AVOID';
 }
 
-export function conviction(asset: string, inputs: ConvictionInputs): ConvictionResult {
-  const w = CONVICTION_WEIGHTS;
+export function conviction(
+  asset: string,
+  inputs: ConvictionInputs,
+  weights: ConvictionInputs = CONVICTION_WEIGHTS,
+): ConvictionResult {
+  const w = weights;
   const raw =
     inputs.regimeFit * w.regimeFit +
     inputs.valuation * w.valuation +

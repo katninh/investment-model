@@ -32,7 +32,7 @@ const COLS: { key: keyof typeof CONVICTION_WEIGHTS; label: string }[] = [
 ];
 
 export default async function ConvictionPage() {
-  const { results, regime } = await getConviction();
+  const { results, regime, weights } = await getConviction();
 
   return (
     <div className="animate-fade-up mx-auto max-w-5xl p-4 sm:p-6">
@@ -47,7 +47,7 @@ export default async function ConvictionPage() {
                 {COLS.map((c) => (
                   <th key={c.key} className="px-3 py-3 text-right font-medium">
                     {c.label}
-                    <div className="text-xs font-normal text-gray-400">{CONVICTION_WEIGHTS[c.key].toFixed(2)}</div>
+                    <div className="text-xs font-normal text-gray-400">{weights[c.key].toFixed(2)}</div>
                   </th>
                 ))}
                 <th className="px-3 py-3 text-right font-medium">Conviction</th>
