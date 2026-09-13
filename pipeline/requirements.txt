@@ -1,0 +1,4 @@
+psycopg[binary]>=3.2   # Postgres writes
+requests>=2.31         # FRED, Twelve Data, CFTC, CoinGecko, exchangerate.host (plain REST)
+# pytrends>=4.9.2      # deferred: best-effort Google Trends, weekly/low-volume. Add when wiring sources/trends.py.
+# fredapi intentionally omitted — it pulls pandas; requests covers the FRED REST API in a few lines.
