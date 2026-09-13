@@ -34,11 +34,12 @@ const rows: Row[] = [
   // ── Market ──────────────────────────────────────────────────────────
   { id: 'MKT_XAUUSD',        name: 'Gold XAU/USD',             category: 'market', sourceType: 'api', sourceId: 'XAU/USD',        frequency: 'daily', higherBetter: true,  unit: 'USD' },
   { id: 'MKT_BTC',           name: 'Bitcoin',                  category: 'market', sourceType: 'api', sourceId: 'bitcoin',        frequency: 'daily', higherBetter: true,  unit: 'USD' },
-  { id: 'MKT_SPX',           name: 'S&P 500',                  category: 'market', sourceType: 'api', sourceId: 'SPX',            frequency: 'daily', higherBetter: true,  unit: 'index' },
-  { id: 'MKT_NDX',           name: 'Nasdaq 100',               category: 'market', sourceType: 'api', sourceId: 'NDX',            frequency: 'daily', higherBetter: true,  unit: 'index' },
-  { id: 'MKT_VIX',           name: 'VIX',                      category: 'market', sourceType: 'api', sourceId: 'VIX',            frequency: 'daily', higherBetter: false, unit: 'index' },
-  { id: 'MKT_DXY',           name: 'US Dollar Index (DXY)',    category: 'market', sourceType: 'api', sourceId: 'DXY',            frequency: 'daily', higherBetter: null,  unit: 'index' },
-  { id: 'MKT_WTI',           name: 'WTI Crude Oil',            category: 'market', sourceType: 'api', sourceId: 'WTI',            frequency: 'daily', higherBetter: null,  unit: 'USD' },
+  // S&P, Nasdaq, VIX, USD index, WTI all served free by FRED (Twelve Data paywalls indices/commodities).
+  { id: 'FRED_SP500',        name: 'S&P 500',                  category: 'market', sourceType: 'api', sourceId: 'SP500',          frequency: 'daily', higherBetter: true,  unit: 'index' },
+  { id: 'FRED_NASDAQCOM',    name: 'Nasdaq Composite',         category: 'market', sourceType: 'api', sourceId: 'NASDAQCOM',      frequency: 'daily', higherBetter: true,  unit: 'index' },
+  { id: 'FRED_VIXCLS',       name: 'VIX',                      category: 'market', sourceType: 'api', sourceId: 'VIXCLS',         frequency: 'daily', higherBetter: false, unit: 'index' },
+  { id: 'FRED_DTWEXBGS',     name: 'US Dollar Index (broad)',  category: 'market', sourceType: 'api', sourceId: 'DTWEXBGS',       frequency: 'daily', higherBetter: null,  unit: 'index' },
+  { id: 'FRED_DCOILWTICO',   name: 'WTI Crude Oil',            category: 'market', sourceType: 'api', sourceId: 'DCOILWTICO',     frequency: 'daily', higherBetter: null,  unit: 'USD' },
   { id: 'FRED_DGS2',         name: '2Y Treasury Yield',        category: 'market', sourceType: 'api', sourceId: 'DGS2',           frequency: 'daily', higherBetter: null,  unit: '%' },
   { id: 'FRED_DGS10',        name: '10Y Treasury Yield',       category: 'market', sourceType: 'api', sourceId: 'DGS10',          frequency: 'daily', higherBetter: null,  unit: '%' },
   { id: 'FRED_DGS30',        name: '30Y Treasury Yield',       category: 'market', sourceType: 'api', sourceId: 'DGS30',          frequency: 'daily', higherBetter: null,  unit: '%' },
