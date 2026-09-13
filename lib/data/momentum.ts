@@ -28,6 +28,7 @@ export const getMomentum = cache(async (): Promise<AssetMomentum[]> => {
            COALESCE(array_agg(value ORDER BY obs_date) FILTER (WHERE value IS NOT NULL), '{}') AS values
     FROM raw_observations
     WHERE indicator_id IN (${idList})
+      AND obs_date >= (CURRENT_DATE - INTERVAL '3 years')
     GROUP BY indicator_id
   `);
 

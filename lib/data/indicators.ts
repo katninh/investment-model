@@ -49,7 +49,11 @@ export const getIndicatorSignals = cache(async (): Promise<IndicatorRow[]> => {
            ) AS values,
            MAX(r.obs_date) AS "lastDate"
     FROM indicators i
-    LEFT JOIN raw_observations r ON r.indicator_id = i.id
+    LEFT JOIN raw_observations r
+      ON r.indicator_id = i.id
+      -- bound history: signals over a ~15yr window (multiple cycles) — far less
+      -- data to aggregate/transfer than 60yr daily series, and keeps z-scores current
+      AND r.obs_date >= (CURRENT_DATE - INTERVAL '15 years')
     GROUP BY i.id
     ORDER BY i.category, i.id
   `);
