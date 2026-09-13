@@ -4,6 +4,7 @@ Collects each source into raw_observations; records per-source health in ingesti
 Collection only — no signal math (that lives in TS, PRD §5A.1).
 """
 import argparse
+import bisect
 import os
 import sys
 import time
@@ -35,11 +36,11 @@ def _load_env():
             os.environ.setdefault(key.strip(), val.strip())
 
 
-def _run_series(conn, indicator_id, fetch_fn):
+def _run_series(conn, indicator_id, fetch_fn, source_type="api"):
     """Fetch + upsert one series with its own transaction; return (ok, err, n)."""
     try:
         rows = fetch_fn()
-        n = upsert_observations(conn, indicator_id, "api", rows)
+        n = upsert_observations(conn, indicator_id, source_type, rows)
         conn.commit()
         print(f"  ✓ {indicator_id}: {n} obs")
         return 1, 0, n
@@ -104,6 +105,63 @@ def collect_valuation(conn, mode):
     return _run_series(conn, "VAL_BTC_MVRV", fetch_mvrv)[:2]
 
 
+def _read_series(conn, indicator_id):
+    """Read a stored series as [(date_str, value, None)] ordered by date."""
+    rows = conn.execute(
+        "SELECT obs_date, value FROM raw_observations "
+        "WHERE indicator_id = %s AND value IS NOT NULL ORDER BY obs_date",
+        (indicator_id,),
+    ).fetchall()
+    return [(str(d), float(v), None) for (d, v) in rows]
+
+
+def _ratio(numer, denom, ffill=False):
+    """numer/denom aligned by date. ffill=True uses the most recent denom <= each numer date
+    (for lower-frequency denominators like quarterly GDP); else an exact date join."""
+    out = []
+    if ffill:
+        ds = sorted(denom, key=lambda r: r[0])
+        dates = [r[0] for r in ds]
+        vals = [r[1] for r in ds]
+        for d, nv, _ in numer:
+            i = bisect.bisect_right(dates, d) - 1
+            if i < 0 or vals[i] == 0:
+                continue
+            out.append((d, nv / vals[i], {"n": nv, "d": vals[i]}))
+    else:
+        dmap = {r[0]: r[1] for r in denom}
+        for d, nv, _ in numer:
+            dv = dmap.get(d)
+            if not dv:
+                continue
+            out.append((d, nv / dv, {"n": nv, "d": dv}))
+    return out
+
+
+def collect_derived(conn, mode):
+    """Compute ratio indicators from FRED inputs + stored gold (deterministic, not model logic)."""
+    key = os.environ["FRED_API_KEY"]
+    start = None if mode == "full" else (date.today() - timedelta(days=800)).isoformat()
+    gold = _read_series(conn, "MKT_XAUUSD")
+    jobs = [
+        # Buffett proxy = Fed Z.1 corporate-equities market value / nominal GDP (both quarterly,
+        # full history — Wilshire 5000 was delisted from FRED). Quarterly ⇒ always full history.
+        ("VAL_BUFFETT", lambda: _ratio(fetch_series("NCBEILQ027S", key),
+                                       fetch_series("GDP", key), ffill=True)),
+        # Dow/Gold = DJIA / gold (both daily → exact date join)
+        ("VAL_DOW_GOLD", lambda: _ratio(fetch_series("DJIA", key, start=start), gold)),
+        # Copper/Gold = copper (monthly) / gold (daily, forward-filled)
+        ("DERIV_COPPER_GOLD", lambda: _ratio(fetch_series("PCOPPUSDM", key), gold, ffill=True)),
+    ]
+    ok = err = 0
+    for indicator_id, fn in jobs:
+        o, e, _ = _run_series(conn, indicator_id, fn, source_type="derived")
+        ok += o
+        err += e
+        time.sleep(0.3)
+    return ok, err
+
+
 # (source_name, fn, modes it runs in)
 SOURCES = [
     ("fred", collect_fred, {"daily", "weekly", "monthly", "full"}),
@@ -111,6 +169,7 @@ SOURCES = [
     ("crypto", collect_crypto, {"daily", "full"}),
     ("sentiment", collect_sentiment, {"daily", "full"}),
     ("valuation", collect_valuation, {"daily", "full"}),
+    ("derived", collect_derived, {"daily", "full"}),  # needs gold in DB (runs after prices)
 ]
 
 
