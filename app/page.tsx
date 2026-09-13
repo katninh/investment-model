@@ -26,6 +26,9 @@ export default async function Home() {
         <Link href="/valuation" className="text-blue-600 hover:underline dark:text-blue-400">
           Valuation →
         </Link>
+        <Link href="/momentum" className="text-blue-600 hover:underline dark:text-blue-400">
+          Momentum →
+        </Link>
         <Link href="/indicators" className="text-blue-600 hover:underline dark:text-blue-400">
           Indicators Explorer →
         </Link>
