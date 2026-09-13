@@ -20,6 +20,9 @@ export default async function Home() {
         <Link href="/regime" className="text-blue-600 hover:underline dark:text-blue-400">
           Macro Regime →
         </Link>
+        <Link href="/sentiment" className="text-blue-600 hover:underline dark:text-blue-400">
+          Sentiment →
+        </Link>
         <Link href="/indicators" className="text-blue-600 hover:underline dark:text-blue-400">
           Indicators Explorer →
         </Link>
