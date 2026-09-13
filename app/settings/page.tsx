@@ -3,7 +3,7 @@ import { PageHeader } from '@/components/ui';
 import { SettingsForm } from '@/components/SettingsForm';
 import { resetSettings } from '@/lib/actions/config';
 
-export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
 
 export default async function SettingsPage() {
   const settings = await getSettings();

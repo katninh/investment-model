@@ -3,7 +3,7 @@ import { RegimeBanner } from '@/components/RegimeBanner';
 import { Card, CardTitle, PageHeader, Badge } from '@/components/ui';
 import type { IndicatorRow } from '@/lib/data/indicators';
 
-export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
 
 const CELLS = [
   { regime: 'STAGFLATION', label: 'Stagflation', sub: 'growth ↓ · inflation ↑' },

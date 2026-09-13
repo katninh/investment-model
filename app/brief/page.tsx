@@ -1,7 +1,7 @@
 import { getBrief } from '@/lib/data/brief';
 import { Card, PageHeader } from '@/components/ui';
 
-export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
 
 export default async function BriefPage() {
   const { brief, markdown } = await getBrief();

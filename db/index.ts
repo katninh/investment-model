@@ -10,7 +10,7 @@ const client =
   globalForDb.pgClient ??
   postgres(process.env.DATABASE_URL!, {
     prepare: false, // Supabase transaction pooler (pgbouncer, port 6543)
-    max: 5,
+    max: 10,
     idle_timeout: 120, // keep connections warm between navigations (seconds)
     connect_timeout: 15,
   });

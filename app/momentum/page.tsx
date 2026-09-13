@@ -1,7 +1,7 @@
 import { getMomentum } from '@/lib/data/momentum';
 import { Card, CardTitle, PageHeader, Badge } from '@/components/ui';
 
-export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
 
 function scoreLabel(score: number): { text: string; variant: 'success' | 'error' | 'neutral' } {
   if (score >= 1) return { text: 'STRONG UP', variant: 'success' };

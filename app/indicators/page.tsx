@@ -2,7 +2,7 @@ import { getIndicatorSignals } from '@/lib/data/indicators';
 import { IndicatorsTable } from '@/components/IndicatorsTable';
 import { PageHeader } from '@/components/ui';
 
-export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
 
 export default async function IndicatorsPage() {
   const rows = await getIndicatorSignals();

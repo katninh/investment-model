@@ -4,7 +4,7 @@ import { Card, CardTitle, PageHeader } from '@/components/ui';
 import { DonutChart } from '@/components/charts/DonutChart';
 import { PortfolioPlanner } from '@/components/PortfolioPlanner';
 
-export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
 
 const ASSET_HEX: Record<string, string> = {
   equities: '#3b82f6',

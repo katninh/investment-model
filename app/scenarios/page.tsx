@@ -2,7 +2,7 @@ import { getScenarios } from '@/lib/data/scenarios';
 import { ASSETS } from '@/lib/model/scenarios';
 import { Card, CardTitle, PageHeader, Badge } from '@/components/ui';
 
-export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
 
 const SCEN_HEX = ['#5750f1', '#22c55e', '#f59e0b', '#a855f7', '#ef4444'];
 

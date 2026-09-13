@@ -2,7 +2,7 @@ import { getDataStatus } from '@/lib/data/dataStatus';
 import { Card, CardTitle, PageHeader, Badge } from '@/components/ui';
 import { ManualEntryForm } from '@/components/ManualEntryForm';
 
-export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
 
 export default async function DataStatusPage() {
   const { rows, ingestion } = await getDataStatus();

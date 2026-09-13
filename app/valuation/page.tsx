@@ -2,7 +2,7 @@ import { getValuation } from '@/lib/data/valuation';
 import { Card, CardTitle, PageHeader } from '@/components/ui';
 import { RadialGauge } from '@/components/charts/RadialGauge';
 
-export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
 
 function gaugeColor(score: number): string {
   if (score >= 7) return '#22c55e'; // cheap

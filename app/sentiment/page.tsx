@@ -1,7 +1,7 @@
 import { getSentiment } from '@/lib/data/sentiment';
 import { Card, CardTitle, PageHeader, Badge } from '@/components/ui';
 
-export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
 
 const LABEL_COLOR: Record<string, string> = {
   'EXTREME FEAR': 'text-green-600 dark:text-green-400',

@@ -7,7 +7,7 @@ import { DonutChart } from '@/components/charts/DonutChart';
 import { ASSET_LABEL } from '@/lib/data/conviction';
 import type { Action } from '@/lib/model/conviction';
 
-export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
 
 const ACTION_VARIANT: Record<Action, 'success' | 'neutral' | 'warning' | 'error'> = {
   ACCUMULATE: 'success',

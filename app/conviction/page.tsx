@@ -2,7 +2,7 @@ import { getConviction, ASSET_LABEL } from '@/lib/data/conviction';
 import { CONVICTION_WEIGHTS, type Action } from '@/lib/model/conviction';
 import { Card, PageHeader, Badge } from '@/components/ui';
 
-export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
 
 const ACTION_VARIANT: Record<Action, 'success' | 'neutral' | 'warning' | 'error'> = {
   ACCUMULATE: 'success',
