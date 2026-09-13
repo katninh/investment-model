@@ -32,6 +32,9 @@ export default async function Home() {
         <Link href="/scenarios" className="text-blue-600 hover:underline dark:text-blue-400">
           Scenarios →
         </Link>
+        <Link href="/conviction" className="text-blue-600 hover:underline dark:text-blue-400">
+          Conviction →
+        </Link>
         <Link href="/indicators" className="text-blue-600 hover:underline dark:text-blue-400">
           Indicators Explorer →
         </Link>
