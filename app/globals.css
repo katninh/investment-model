@@ -3,21 +3,29 @@
 /* class-based dark mode (toggle .dark on <html>) */
 @custom-variant dark (&:where(.dark, .dark *));
 
-@theme {
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+/* runtime-variable references must live in @theme inline */
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
 
-  /* brand scale (periwinkle-indigo, TailAdmin-like) */
-  --color-brand-50: #eef2ff;
-  --color-brand-100: #e0e7ff;
-  --color-brand-200: #c7d2fe;
-  --color-brand-300: #a5b4fc;
-  --color-brand-400: #818cf8;
-  --color-brand-500: #6366f1;
-  --color-brand-600: #4f46e5;
-  --color-brand-700: #4338ca;
-  --color-brand-800: #3730a3;
-  --color-brand-900: #312e81;
+/* static design tokens */
+@theme {
+  /* NextAdmin brand (periwinkle #5750f1) */
+  --color-brand-50: #eef0ff;
+  --color-brand-100: #e0e2ff;
+  --color-brand-200: #c7c9ff;
+  --color-brand-300: #a5a6fc;
+  --color-brand-400: #8b88f8;
+  --color-brand-500: #5750f1;
+  --color-brand-600: #3c35d8;
+  --color-brand-700: #322db4;
+  --color-brand-800: #2a2793;
+  --color-brand-900: #262478;
+
+  /* NextAdmin card shadows */
+  --shadow-card: 0px 1px 3px 0px rgba(16, 24, 40, 0.1);
+  --shadow-card-lg: 0px 4px 8px -2px rgba(16, 24, 40, 0.1), 0px 2px 4px -2px rgba(16, 24, 40, 0.06);
 }
 
 :root {
@@ -29,22 +37,38 @@
 
 body {
   background: var(--color-gray-50);
-  color: var(--color-gray-800);
-  font-family: var(--font-sans);
+  color: var(--color-gray-700);
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 :root.dark body {
   background: var(--color-gray-950);
-  color: var(--color-gray-200);
+  color: var(--color-gray-300);
 }
 
-/* smooth theme + interaction transitions */
 * {
-  transition-property: background-color, border-color, color, fill, stroke;
+  transition-property: background-color, border-color, color, fill, stroke, box-shadow;
   transition-duration: 150ms;
 }
 
-/* ApexCharts: strip default fonts so charts inherit ours */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-up {
+  animation: fade-up 0.4s ease-out both;
+}
+
 .apexcharts-canvas {
-  font-family: var(--font-sans) !important;
+  font-family: var(--font-geist-sans), sans-serif !important;
+}
+.apexcharts-tooltip {
+  border: none !important;
+  box-shadow: var(--shadow-card-lg) !important;
 }

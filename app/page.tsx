@@ -1,42 +1,32 @@
 import Link from 'next/link';
+import { FileText } from 'lucide-react';
 import { getDashboard } from '@/lib/data/dashboard';
 import { RegimeBanner } from '@/components/RegimeBanner';
+import { Card, CardTitle, PageHeader, Badge, StatCard } from '@/components/ui';
+import { DonutChart } from '@/components/charts/DonutChart';
 import { ASSET_LABEL } from '@/lib/data/conviction';
 import type { Action } from '@/lib/model/conviction';
 
 export const revalidate = 3600;
 
-const ACTION_STYLE: Record<Action, string> = {
-  ACCUMULATE: 'bg-green-600 text-white',
-  'LEAN BUY': 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',
-  HOLD: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300',
-  'LEAN REDUCE': 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
-  AVOID: 'bg-red-600 text-white',
+const ACTION_VARIANT: Record<Action, 'success' | 'neutral' | 'warning' | 'error'> = {
+  ACCUMULATE: 'success',
+  'LEAN BUY': 'success',
+  HOLD: 'neutral',
+  'LEAN REDUCE': 'warning',
+  AVOID: 'error',
 };
-
-const SCEN_COLOR = ['bg-blue-500', 'bg-green-500', 'bg-amber-500', 'bg-purple-500', 'bg-red-500'];
-const ASSET_COLOR: Record<string, string> = {
-  equities: 'bg-blue-500',
-  gold: 'bg-amber-500',
-  btc: 'bg-orange-500',
-  bonds: 'bg-purple-500',
-  cash: 'bg-zinc-400',
+const ASSET_HEX: Record<string, string> = {
+  equities: '#3b82f6',
+  gold: '#f59e0b',
+  btc: '#f97316',
+  bonds: '#a855f7',
+  cash: '#94a3b8',
 };
+const SCEN_HEX = ['#5750f1', '#22c55e', '#f59e0b', '#a855f7', '#ef4444'];
 
 const num = (x: number | null) =>
   x == null ? '—' : x.toLocaleString(undefined, { maximumFractionDigits: 2 });
-const chg = (x: number | null) => (x == null ? '' : `${x >= 0 ? '+' : ''}${(x * 100).toFixed(1)}%`);
-
-const NAV = [
-  ['/regime', 'Regime'],
-  ['/valuation', 'Valuation'],
-  ['/sentiment', 'Sentiment'],
-  ['/momentum', 'Momentum'],
-  ['/scenarios', 'Scenarios'],
-  ['/conviction', 'Conviction'],
-  ['/portfolio', 'Portfolio'],
-  ['/indicators', 'Indicators'],
-];
 
 export default async function Dashboard() {
   const { prices, regime, conviction, scenarios, ev, allocations, asOf } = await getDashboard();
@@ -44,120 +34,115 @@ export default async function Dashboard() {
   const funded = allocations.filter((a) => a.weight > 0.0005);
 
   return (
-    <main className="mx-auto max-w-5xl p-6">
-      <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-        <div>
-          <h1 className="text-2xl font-semibold">Macro Investment Model</h1>
-          <p className="text-sm text-zinc-500">As of {asOf}</p>
-        </div>
-        <Link
-          href="/brief"
-          className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
-        >
-          Generate Brief →
-        </Link>
-      </div>
+    <div className="animate-fade-up mx-auto max-w-7xl p-4 sm:p-6">
+      <PageHeader
+        title="Dashboard"
+        description={`As of ${asOf}`}
+        action={
+          <Link
+            href="/brief"
+            className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-card hover:bg-brand-600"
+          >
+            <FileText className="h-4 w-4" /> Generate Brief
+          </Link>
+        }
+      />
 
       {/* price strip */}
-      <div className="mb-6 grid grid-cols-3 gap-2 sm:grid-cols-6">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
         {prices.map((p) => (
-          <div key={p.label} className="rounded-lg border border-zinc-200 p-3 dark:border-zinc-800">
-            <div className="text-xs text-zinc-400">{p.label}</div>
-            <div className="tabular-nums font-semibold">{num(p.latest)}</div>
-            <div
-              className={`text-xs tabular-nums ${
-                (p.change ?? 0) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
-              }`}
-            >
-              {chg(p.change)}
-            </div>
-          </div>
+          <StatCard key={p.label} label={p.label} value={num(p.latest)} delta={p.change} />
         ))}
       </div>
 
-      {/* regime */}
-      <Link href="/regime" className="block">
-        <RegimeBanner call={regime} />
-      </Link>
+      {/* regime + allocation */}
+      <div className="mt-6 grid gap-6 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <CardTitle className="mb-4">Macro Regime</CardTitle>
+          <RegimeBanner call={regime} />
+        </Card>
+        <Card>
+          <CardTitle className="mb-1">Target Allocation</CardTitle>
+          <DonutChart
+            labels={funded.map((a) => ASSET_LABEL[a.asset] ?? a.asset)}
+            series={funded.map((a) => Math.round(a.weight * 100))}
+            colors={funded.map((a) => ASSET_HEX[a.asset] ?? '#94a3b8')}
+          />
+        </Card>
+      </div>
 
-      {/* conviction row */}
-      <Link href="/conviction" className="mt-6 block">
-        <h2 className="mb-2 text-sm font-semibold text-zinc-500">Conviction</h2>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+      {/* conviction */}
+      <div className="mt-6">
+        <div className="mb-3 flex items-center justify-between">
+          <CardTitle>Conviction</CardTitle>
+          <Link href="/conviction" className="text-sm font-medium text-brand-500 hover:underline">
+            Details →
+          </Link>
+        </div>
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           {conviction.map((c) => (
-            <div key={c.asset} className="rounded-lg border border-zinc-200 p-3 dark:border-zinc-800">
-              <div className="font-medium">{ASSET_LABEL[c.asset] ?? c.asset}</div>
-              <div className="tabular-nums text-lg font-semibold">
+            <Card key={c.asset}>
+              <div className="flex items-center justify-between">
+                <span className="font-medium text-gray-800 dark:text-white">
+                  {ASSET_LABEL[c.asset] ?? c.asset}
+                </span>
+                <Badge variant={ACTION_VARIANT[c.action]}>{c.action}</Badge>
+              </div>
+              <div className="mt-2 text-2xl font-bold tabular-nums text-gray-800 dark:text-white">
                 {c.conviction >= 0 ? '+' : ''}
                 {c.conviction.toFixed(2)}
               </div>
-              <span className={`mt-1 inline-block rounded px-1.5 py-0.5 text-xs font-medium ${ACTION_STYLE[c.action]}`}>
-                {c.action}
-              </span>
-            </div>
+              <div className="relative mt-2 h-1.5 rounded bg-gray-100 dark:bg-gray-800">
+                <div className="absolute left-1/2 top-0 h-1.5 w-px bg-gray-300 dark:bg-gray-600" />
+                <div
+                  className={`absolute top-0 h-1.5 rounded ${c.conviction >= 0 ? 'bg-green-500' : 'bg-red-500'}`}
+                  style={{
+                    left: c.conviction >= 0 ? '50%' : `${50 + c.conviction * 50}%`,
+                    width: `${Math.abs(c.conviction) * 50}%`,
+                  }}
+                />
+              </div>
+            </Card>
           ))}
         </div>
-      </Link>
+      </div>
 
-      {/* scenario strip */}
-      <Link href="/scenarios" className="mt-6 block">
-        <h2 className="mb-2 text-sm font-semibold text-zinc-500">Scenarios</h2>
-        <div className="flex h-6 w-full overflow-hidden rounded">
+      {/* scenarios */}
+      <Card className="mt-6">
+        <div className="mb-3 flex items-center justify-between">
+          <CardTitle>Scenarios</CardTitle>
+          <Link href="/scenarios" className="text-sm font-medium text-brand-500 hover:underline">
+            Details →
+          </Link>
+        </div>
+        <div className="flex h-7 w-full overflow-hidden rounded-lg">
           {ranked.map((s, i) => (
             <div
               key={s.code}
-              className={`${SCEN_COLOR[i % SCEN_COLOR.length]} flex items-center justify-center text-xs text-white`}
-              style={{ width: `${s.probability * 100}%` }}
+              className="flex items-center justify-center text-xs font-medium text-white"
+              style={{ width: `${s.probability * 100}%`, background: SCEN_HEX[i % SCEN_HEX.length] }}
               title={`${s.name} ${Math.round(s.probability * 100)}%`}
             >
-              {s.probability >= 0.12 ? `${Math.round(s.probability * 100)}%` : ''}
+              {s.probability >= 0.1 ? `${Math.round(s.probability * 100)}%` : ''}
             </div>
           ))}
         </div>
-        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-500">
-          <span>Top: <strong>{ranked[0]?.name}</strong> {Math.round((ranked[0]?.probability ?? 0) * 100)}%</span>
-          <span>E[gold] {(ev.gold ?? 0).toFixed(1)}%</span>
-          <span>E[BTC] {(ev.btc ?? 0).toFixed(1)}%</span>
-          <span>E[equities] {(ev.equities ?? 0).toFixed(1)}%</span>
-        </div>
-      </Link>
-
-      {/* this month's action */}
-      <Link href="/portfolio" className="mt-6 block">
-        <h2 className="mb-2 text-sm font-semibold text-zinc-500">Target Allocation</h2>
-        <div className="mb-2 flex h-6 w-full overflow-hidden rounded">
-          {funded.map((a) => (
-            <div
-              key={a.asset}
-              className={`${ASSET_COLOR[a.asset] ?? 'bg-zinc-500'} flex items-center justify-center text-xs text-white`}
-              style={{ width: `${a.weight * 100}%` }}
-              title={`${ASSET_LABEL[a.asset] ?? a.asset} ${Math.round(a.weight * 100)}%`}
-            >
-              {a.weight >= 0.08 ? `${Math.round(a.weight * 100)}%` : ''}
-            </div>
-          ))}
-        </div>
-        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-500">
-          {funded.map((a) => (
-            <span key={a.asset}>
-              {ASSET_LABEL[a.asset] ?? a.asset} {Math.round(a.weight * 100)}%
+        <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+          <span className="text-gray-500">
+            Top: <strong className="text-gray-800 dark:text-white">{ranked[0]?.name}</strong>
+          </span>
+          {['gold', 'btc', 'equities'].map((a) => (
+            <span key={a} className="text-gray-500">
+              E[{a}]{' '}
+              <strong
+                className={`tabular-nums ${(ev[a] ?? 0) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
+              >
+                {(ev[a] ?? 0).toFixed(1)}%
+              </strong>
             </span>
           ))}
         </div>
-      </Link>
-
-      {/* nav */}
-      <nav className="mt-8 flex flex-wrap gap-x-4 gap-y-1 border-t border-zinc-200 pt-4 text-sm dark:border-zinc-800">
-        {NAV.map(([href, label]) => (
-          <Link key={href} href={href} className="text-blue-600 hover:underline dark:text-blue-400">
-            {label}
-          </Link>
-        ))}
-      </nav>
-
-      <p className="mt-6 text-xs text-zinc-400">
-        Research tool, not financial advice. Alerts (§8.7) are a later addition.
-      </p>
-    </main>
+      </Card>
+    </div>
   );
 }
