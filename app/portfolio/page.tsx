@@ -2,6 +2,7 @@ import { getPortfolio } from '@/lib/data/portfolio';
 import { ASSET_LABEL } from '@/lib/data/conviction';
 import { Card, CardTitle, PageHeader } from '@/components/ui';
 import { DonutChart } from '@/components/charts/DonutChart';
+import { PortfolioPlanner } from '@/components/PortfolioPlanner';
 
 export const revalidate = 3600;
 
@@ -66,8 +67,18 @@ export default async function PortfolioPage() {
         </Card>
       </div>
 
+      <div className="mt-6">
+        <PortfolioPlanner
+          assets={funded.map((a) => ({
+            asset: a.asset,
+            label: ASSET_LABEL[a.asset] ?? a.asset,
+            weight: a.weight,
+          }))}
+        />
+      </div>
+
       <p className="mt-4 text-xs text-gray-400">
-        Target weights only — not advice. Deployment plan and drift tracking are added with Portfolio inputs.
+        Target weights only — not advice. Deployment and drift figures are stored privately in your browser.
       </p>
     </div>
   );
