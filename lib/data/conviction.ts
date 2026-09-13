@@ -1,8 +1,9 @@
-import { getRegimeCall } from './regime';
+import { getRegimeCall, type RegimeResult } from './regime';
 import { getValuation } from './valuation';
-import { getSentiment } from './sentiment';
-import { getMomentum } from './momentum';
-import { getScenarios } from './scenarios';
+import { getSentiment, type SentimentResult } from './sentiment';
+import { getMomentum, type AssetMomentum } from './momentum';
+import { getScenarios, type ScenariosResult } from './scenarios';
+import type { AssetValuation } from '@/lib/model/valuation';
 import { conviction, REGIME_FIT, type ConvictionResult } from '@/lib/model/conviction';
 
 const ASSETS = ['equities', 'gold', 'btc', 'bonds'] as const;
@@ -22,6 +23,14 @@ export const ASSET_LABEL: Record<string, string> = {
 export interface ConvictionData {
   results: ConvictionResult[];
   regime: string;
+  // full model outputs, so the brief composes from one fetch (existing consumers ignore this)
+  models: {
+    regime: RegimeResult;
+    valuation: { assets: AssetValuation[] };
+    sentiment: SentimentResult;
+    momentum: AssetMomentum[];
+    scenarios: ScenariosResult;
+  };
 }
 
 export async function getConviction(): Promise<ConvictionData> {
@@ -63,5 +72,9 @@ export async function getConviction(): Promise<ConvictionData> {
     }),
   ).sort((a, b) => b.conviction - a.conviction);
 
-  return { results, regime: regime.call.regime };
+  return {
+    results,
+    regime: regime.call.regime,
+    models: { regime, valuation, sentiment, momentum, scenarios },
+  };
 }
