@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { db } from '@/db';
 import { sql } from 'drizzle-orm';
 import { computeSignal, type Signal } from '@/lib/model/signals';
@@ -35,7 +36,8 @@ function toISODate(d: Date | string | null): string | null {
   return d instanceof Date ? d.toISOString().slice(0, 10) : String(d).slice(0, 10);
 }
 
-export async function getIndicatorSignals(): Promise<IndicatorRow[]> {
+// cache(): dedupe to a single execution per request, even when many models call it.
+export const getIndicatorSignals = cache(async (): Promise<IndicatorRow[]> => {
   const result = await db.execute(sql`
     SELECT i.id, i.name, i.category,
            i.source_type   AS "sourceType",
@@ -82,4 +84,4 @@ export async function getIndicatorSignals(): Promise<IndicatorRow[]> {
       signal,
     };
   });
-}
+});

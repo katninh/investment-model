@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { db } from '@/db';
 import { sql } from 'drizzle-orm';
 import { momentumScore, type MomentumScore } from '@/lib/model/momentum';
@@ -16,7 +17,7 @@ export interface AssetMomentum {
   momentum: MomentumScore;
 }
 
-export async function getMomentum(): Promise<AssetMomentum[]> {
+export const getMomentum = cache(async (): Promise<AssetMomentum[]> => {
   const ids = Object.values(ASSETS);
   const idList = sql.join(
     ids.map((id) => sql`${id}`),
@@ -39,4 +40,4 @@ export async function getMomentum(): Promise<AssetMomentum[]> {
     id,
     momentum: momentumScore(byId.get(id) ?? []),
   }));
-}
+});
