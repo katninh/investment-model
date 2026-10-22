@@ -12,7 +12,7 @@ const base: SignalSet = {
   realRateZ: 0,
   hySpreadZ: 0,
   vixZ: 0,
-  sahmZ: 0,
+  sahmLatest: 0,
   curveValue: 0,
 };
 
@@ -30,7 +30,7 @@ describe('scenarioProbabilities', () => {
       realRateZ: -0.5,
       hySpreadZ: 1.2,
       vixZ: 1.0,
-      sahmZ: 1.0,
+      sahmLatest: 0.6,
       curveValue: -0.2,
     };
     const res = scenarioProbabilities(SCENARIOS, recession);
@@ -65,7 +65,7 @@ describe('expectedReturns', () => {
       realRateZ: -0.5,
       hySpreadZ: 1.2,
       vixZ: 1.0,
-      sahmZ: 1.0,
+      sahmLatest: 0.6,
       curveValue: -0.2,
     });
     const ev = expectedReturns(res);

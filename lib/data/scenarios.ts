@@ -26,7 +26,7 @@ export async function getScenarios(): Promise<ScenariosResult> {
     realRateZ: z('FRED_DFII10'),
     hySpreadZ: z('FRED_BAMLH0A0HYM2'),
     vixZ: z('FRED_VIXCLS'),
-    sahmZ: z('FRED_SAHMREALTIME'),
+    sahmLatest: byId.get('FRED_SAHMREALTIME')?.signal?.latest ?? 0,
     curveValue: byId.get('FRED_T10Y2Y')?.signal?.latest ?? 0,
   };
 

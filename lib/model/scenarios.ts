@@ -9,7 +9,7 @@ export interface SignalSet {
   realRateZ: number; // z-score of 10Y TIPS real yield
   hySpreadZ: number; // z-score of HY credit spreads
   vixZ: number; // z-score of VIX
-  sahmZ: number; // z-score of Sahm rule
+  sahmLatest: number; // SAHMREALTIME value (pp above 12mo low); rule fires at >= 0.50
   curveValue: number; // 2s10s level (negative = inverted)
 }
 
@@ -76,7 +76,7 @@ export const SCENARIOS: Scenario[] = [
     name: 'Recession',
     triggers: [
       { label: 'Growth falling', test: (s) => s.growthScore < -0.2, weight: 2 },
-      { label: 'Sahm rule triggering', test: (s) => s.sahmZ > 0.5, weight: 2 },
+      { label: 'Sahm rule triggered', test: (s) => s.sahmLatest >= 0.5, weight: 2 },
       { label: 'Credit stress', test: (s) => s.hySpreadZ > 0.5, weight: 2 },
       { label: 'Curve inverted', test: (s) => s.curveValue < 0, weight: 1 },
       { label: 'Volatility elevated', test: (s) => s.vixZ > 0.5, weight: 1 },
