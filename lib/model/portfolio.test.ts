@@ -55,3 +55,20 @@ describe('constructPortfolio', () => {
     expect(btc.weight).toBeCloseTo(0.35, 6);
   });
 });
+
+describe('constructPortfolio with vol-targeting', () => {
+  const results = [mk('btc', 0.3), mk('gold', 0.3)]; // equal conviction
+
+  it('equal conviction: lower-vol asset gets more weight than higher-vol', () => {
+    const allocs = constructPortfolio(results, DEFAULT_CONSTRAINTS, { btc: 0.6, gold: 0.15 });
+    const btc = allocs.find((a) => a.asset === 'btc')!;
+    const gold = allocs.find((a) => a.asset === 'gold')!;
+    expect(gold.weight).toBeGreaterThan(btc.weight); // risk parity favours the calmer asset
+  });
+
+  it('still sums to 1 and respects minCash', () => {
+    const allocs = constructPortfolio(results, DEFAULT_CONSTRAINTS, { btc: 0.6, gold: 0.15 });
+    expect(allocs.reduce((s, a) => s + a.weight, 0)).toBeCloseTo(1, 6);
+    expect(allocs.find((a) => a.asset === 'cash')!.weight).toBeGreaterThanOrEqual(DEFAULT_CONSTRAINTS.minCash - 1e-9);
+  });
+});
