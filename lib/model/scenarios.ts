@@ -9,7 +9,7 @@ export interface SignalSet {
   realRateZ: number; // z-score of 10Y TIPS real yield
   hySpreadZ: number; // z-score of HY credit spreads
   vixZ: number; // z-score of VIX
-  sahmZ: number; // z-score of Sahm rule
+  sahmLatest: number; // SAHMREALTIME value (pp above 12mo low); rule fires at >= 0.50
   curveValue: number; // 2s10s level (negative = inverted)
 }
 
@@ -76,7 +76,7 @@ export const SCENARIOS: Scenario[] = [
     name: 'Recession',
     triggers: [
       { label: 'Growth falling', test: (s) => s.growthScore < -0.2, weight: 2 },
-      { label: 'Sahm rule triggering', test: (s) => s.sahmZ > 0.5, weight: 2 },
+      { label: 'Sahm rule triggered', test: (s) => s.sahmLatest >= 0.5, weight: 2 },
       { label: 'Credit stress', test: (s) => s.hySpreadZ > 0.5, weight: 2 },
       { label: 'Curve inverted', test: (s) => s.curveValue < 0, weight: 1 },
       { label: 'Volatility elevated', test: (s) => s.vixZ > 0.5, weight: 1 },
@@ -113,6 +113,27 @@ export function scenarioProbabilities(scenarios: Scenario[], s: SignalSet): Scen
     allTriggers: r.allTriggers,
     assetReturns: r.sc.assetReturns,
   }));
+}
+
+// Gold price target per scenario = live spot × (1 + scenario gold return).
+// v5 wants gold anchored to the real-yield regime, not a narrative; the
+// regression residual (valuation.ts) sets fair value, scenarios adjust from
+// live spot via their (tunable) gold-return assumptions — no second hardcoded
+// price grid to drift out of date.
+export interface GoldTargets {
+  perScenario: { code: string; name: string; probability: number; target: number }[];
+  weighted: number; // probability-weighted gold target, USD/oz
+}
+
+export function goldScenarioTargets(results: ScenarioResult[], spot: number): GoldTargets {
+  const perScenario = results.map((r) => ({
+    code: r.code,
+    name: r.name,
+    probability: r.probability,
+    target: spot * (1 + (r.assetReturns.gold ?? 0) / 100),
+  }));
+  const weighted = perScenario.reduce((s, p) => s + p.probability * p.target, 0);
+  return { perScenario, weighted };
 }
 
 // E[return] per asset = Σ (probability × scenario return).

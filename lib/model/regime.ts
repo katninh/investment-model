@@ -71,6 +71,57 @@ const TRANSITION: RegimeDef = {
   description: 'Between regimes — one axis lacks a clear direction.',
 };
 
+// --- Transition odds (v5 Pass 1.4) -----------------------------------------
+// Soft probability over the 5 regimes after nudging each axis by its momentum.
+// Not a trained HMM (that needs a multi-cycle history of our own scores we don't
+// yet have) — a transparent projection: project the score forward by momentum,
+// then read each axis as up/flat/down with logistic membership around DEADBAND.
+// ponytail: logistic membership heuristic; swap for a fitted transition matrix
+// once ~3+ yrs of stored regime scores exist.
+export interface RegimeTransition {
+  horizon: '3m' | '12m';
+  odds: Record<Regime, number>; // sums to 1
+}
+
+const AXIS_S = 0.25; // logistic width around the deadband boundary
+
+function axisProbs(proj: number): { up: number; flat: number; down: number } {
+  const up = 1 / (1 + Math.exp(-(proj - DEADBAND) / AXIS_S));
+  const down = 1 / (1 + Math.exp(-(-proj - DEADBAND) / AXIS_S));
+  return { up, flat: Math.max(0, 1 - up - down), down };
+}
+
+function oddsAt(g: number, i: number): Record<Regime, number> {
+  const G = axisProbs(g);
+  const I = axisProbs(i);
+  const corners = {
+    OVERHEAT: G.up * I.up,
+    RECOVERY: G.up * I.down,
+    STAGFLATION: G.down * I.up,
+    RECESSION: G.down * I.down,
+  };
+  const transition = 1 - (corners.OVERHEAT + corners.RECOVERY + corners.STAGFLATION + corners.RECESSION);
+  return { ...corners, TRANSITION: Math.max(0, transition) };
+}
+
+const clamp1 = (x: number) => Math.max(-1, Math.min(1, x));
+
+// momentum args are bounded nudges per unit horizon (~[-1,1]); +1 = strengthening/rising.
+export function regimeTransitionOdds(
+  growthScore: number,
+  inflationScore: number,
+  growthMom: number,
+  inflationMom: number,
+): RegimeTransition[] {
+  return ([
+    ['3m', 0.5],
+    ['12m', 1.5],
+  ] as const).map(([horizon, h]) => ({
+    horizon,
+    odds: oddsAt(clamp1(growthScore + h * growthMom), clamp1(inflationScore + h * inflationMom)),
+  }));
+}
+
 /**
  * Classify the macro regime from two composite scores in [-1, 1]:
  *   growthScore    +1 = growth strengthening, -1 = weakening

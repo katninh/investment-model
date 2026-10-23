@@ -3,6 +3,7 @@ import {
   SCENARIOS,
   scenarioProbabilities,
   expectedReturns,
+  goldScenarioTargets,
   type SignalSet,
 } from './scenarios';
 
@@ -12,7 +13,7 @@ const base: SignalSet = {
   realRateZ: 0,
   hySpreadZ: 0,
   vixZ: 0,
-  sahmZ: 0,
+  sahmLatest: 0,
   curveValue: 0,
 };
 
@@ -30,7 +31,7 @@ describe('scenarioProbabilities', () => {
       realRateZ: -0.5,
       hySpreadZ: 1.2,
       vixZ: 1.0,
-      sahmZ: 1.0,
+      sahmLatest: 0.6,
       curveValue: -0.2,
     };
     const res = scenarioProbabilities(SCENARIOS, recession);
@@ -65,7 +66,7 @@ describe('expectedReturns', () => {
       realRateZ: -0.5,
       hySpreadZ: 1.2,
       vixZ: 1.0,
-      sahmZ: 1.0,
+      sahmLatest: 0.6,
       curveValue: -0.2,
     });
     const ev = expectedReturns(res);
@@ -73,5 +74,18 @@ describe('expectedReturns', () => {
     expect(ev.bonds).toBeGreaterThan(0);
     // btc should be dragged negative
     expect(ev.btc).toBeLessThan(ev.bonds);
+  });
+});
+
+describe('goldScenarioTargets', () => {
+  it('targets = spot × (1 + gold return); weighted = Σ prob × target', () => {
+    const results = [
+      { code: 'A', name: 'A', score: 1, probability: 0.5, metTriggers: [], allTriggers: [], assetReturns: { gold: 10 } },
+      { code: 'B', name: 'B', score: 1, probability: 0.5, metTriggers: [], allTriggers: [], assetReturns: { gold: -10 } },
+    ] as unknown as import('./scenarios').ScenarioResult[];
+    const { perScenario, weighted } = goldScenarioTargets(results, 4000);
+    expect(perScenario[0].target).toBeCloseTo(4400, 6);
+    expect(perScenario[1].target).toBeCloseTo(3600, 6);
+    expect(weighted).toBeCloseTo(4000, 6); // 0.5*4400 + 0.5*3600
   });
 });
