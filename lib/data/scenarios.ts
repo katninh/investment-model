@@ -4,13 +4,16 @@ import {
   SCENARIOS,
   scenarioProbabilities,
   expectedReturns,
+  goldScenarioTargets,
   type SignalSet,
   type ScenarioResult,
+  type GoldTargets,
 } from '@/lib/model/scenarios';
 
 export interface ScenariosResult {
   results: ScenarioResult[];
   ev: Record<string, number>;
+  goldTargets: GoldTargets | null; // null when gold spot is unavailable
   signals: SignalSet;
 }
 
@@ -31,5 +34,11 @@ export async function getScenarios(): Promise<ScenariosResult> {
   };
 
   const results = scenarioProbabilities(SCENARIOS, signals);
-  return { results, ev: expectedReturns(results), signals };
+  const goldSpot = byId.get('MKT_XAUUSD')?.signal?.latest ?? null;
+  return {
+    results,
+    ev: expectedReturns(results),
+    goldTargets: goldSpot != null ? goldScenarioTargets(results, goldSpot) : null,
+    signals,
+  };
 }

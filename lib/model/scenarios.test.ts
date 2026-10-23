@@ -3,6 +3,7 @@ import {
   SCENARIOS,
   scenarioProbabilities,
   expectedReturns,
+  goldScenarioTargets,
   type SignalSet,
 } from './scenarios';
 
@@ -73,5 +74,18 @@ describe('expectedReturns', () => {
     expect(ev.bonds).toBeGreaterThan(0);
     // btc should be dragged negative
     expect(ev.btc).toBeLessThan(ev.bonds);
+  });
+});
+
+describe('goldScenarioTargets', () => {
+  it('targets = spot × (1 + gold return); weighted = Σ prob × target', () => {
+    const results = [
+      { code: 'A', name: 'A', score: 1, probability: 0.5, metTriggers: [], allTriggers: [], assetReturns: { gold: 10 } },
+      { code: 'B', name: 'B', score: 1, probability: 0.5, metTriggers: [], allTriggers: [], assetReturns: { gold: -10 } },
+    ] as unknown as import('./scenarios').ScenarioResult[];
+    const { perScenario, weighted } = goldScenarioTargets(results, 4000);
+    expect(perScenario[0].target).toBeCloseTo(4400, 6);
+    expect(perScenario[1].target).toBeCloseTo(3600, 6);
+    expect(weighted).toBeCloseTo(4000, 6); // 0.5*4400 + 0.5*3600
   });
 });

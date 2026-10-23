@@ -115,6 +115,27 @@ export function scenarioProbabilities(scenarios: Scenario[], s: SignalSet): Scen
   }));
 }
 
+// Gold price target per scenario = live spot × (1 + scenario gold return).
+// v5 wants gold anchored to the real-yield regime, not a narrative; the
+// regression residual (valuation.ts) sets fair value, scenarios adjust from
+// live spot via their (tunable) gold-return assumptions — no second hardcoded
+// price grid to drift out of date.
+export interface GoldTargets {
+  perScenario: { code: string; name: string; probability: number; target: number }[];
+  weighted: number; // probability-weighted gold target, USD/oz
+}
+
+export function goldScenarioTargets(results: ScenarioResult[], spot: number): GoldTargets {
+  const perScenario = results.map((r) => ({
+    code: r.code,
+    name: r.name,
+    probability: r.probability,
+    target: spot * (1 + (r.assetReturns.gold ?? 0) / 100),
+  }));
+  const weighted = perScenario.reduce((s, p) => s + p.probability * p.target, 0);
+  return { perScenario, weighted };
+}
+
 // E[return] per asset = Σ (probability × scenario return).
 export function expectedReturns(results: ScenarioResult[]): Record<string, number> {
   const ev: Record<string, number> = {};
