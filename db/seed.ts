@@ -60,7 +60,7 @@ const rows: Row[] = [
 
   // ── Valuation ───────────────────────────────────────────────────────
   { id: 'VAL_BUFFETT',       name: 'Buffett Indicator',        category: 'valuation', sourceType: 'derived', sourceId: null,      frequency: 'quarterly', higherBetter: false, unit: '%' },
-  { id: 'VAL_CAPE',          name: 'Shiller CAPE',             category: 'valuation', sourceType: 'api',     sourceId: 'MULTPL/SHILLER_PE_RATIO_MONTH', frequency: 'monthly', higherBetter: false, unit: 'ratio' },
+  { id: 'VAL_CAPE',          name: 'Shiller CAPE',             category: 'valuation', sourceType: 'scraped', sourceId: 'multpl',  frequency: 'monthly',   higherBetter: false, unit: 'ratio' },
   { id: 'VAL_FED_MODEL',     name: 'Fed Model (EY vs 10Y)',    category: 'valuation', sourceType: 'derived', sourceId: null,      frequency: 'monthly',   higherBetter: true,  unit: '%' },
   { id: 'VAL_DOW_GOLD',      name: 'Dow/Gold Ratio',           category: 'valuation', sourceType: 'derived', sourceId: null,      frequency: 'daily',     higherBetter: null,  unit: 'ratio' },
   { id: 'VAL_BTC_MVRV',      name: 'BTC MVRV',                 category: 'valuation', sourceType: 'manual',  sourceId: null,      frequency: 'weekly',    higherBetter: false, unit: 'ratio' },
@@ -70,8 +70,9 @@ const rows: Row[] = [
   { id: 'SENT_CRYPTO_FG',    name: 'Crypto Fear & Greed',      category: 'sentiment', sourceType: 'api',     sourceId: null, frequency: 'daily',   higherBetter: null, unit: 'index' },
   { id: 'SENT_AAII',         name: 'AAII Bull-Bear Spread',    category: 'sentiment', sourceType: 'scraped', sourceId: null, frequency: 'weekly',  higherBetter: null, unit: '%' },
   { id: 'SENT_BOFA_FMS',     name: 'BofA FMS Cash Level',      category: 'sentiment', sourceType: 'manual',  sourceId: null, frequency: 'monthly', higherBetter: null, unit: '%' },
-  { id: 'SENT_COT_GOLD',     name: 'COT Gold Net Spec',        category: 'sentiment', sourceType: 'api',     sourceId: null, frequency: 'weekly',  higherBetter: null, unit: 'contracts' },
-  { id: 'SENT_GLD_FLOWS',    name: 'GLD ETF Flows',            category: 'sentiment', sourceType: 'api',     sourceId: null, frequency: 'weekly',  higherBetter: null, unit: 'tonnes' },
+  { id: 'SENT_COT_GOLD',     name: 'COT Gold Net Spec',        category: 'sentiment', sourceType: 'api',     sourceId: 'CFTC 088691', frequency: 'weekly', higherBetter: null, unit: 'contracts' },
+  // GLD flows: no free source (SPDR's holdings file is image-only) — entered manually.
+  { id: 'SENT_GLD_FLOWS',    name: 'GLD ETF Flows',            category: 'sentiment', sourceType: 'manual',  sourceId: null, frequency: 'weekly',  higherBetter: null, unit: 'tonnes' },
 ];
 
 async function main() {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { valuationScores, goldRealYieldResidual, sjcParity, sjcPremium, sjcFromXau } from './valuation';
+import { valuationScores, goldRealYieldResidual, sjcParity, sjcPremium, sjcFromXau, equityRiskPremium } from './valuation';
 
 describe('valuationScores', () => {
   it('high Buffett (expensive) => low equities score (near 1)', () => {
@@ -75,5 +75,15 @@ describe('SJC premium (v5 formula: SJC = XAU × USD/VND × 1.2057 × (1+p) / 1e6
   it('sjcFromXau inverts sjcPremium', () => {
     const p = sjcPremium(142.6, 4125, 26400);
     expect(sjcFromXau(4125, 26400, p)).toBeCloseTo(142.6, 6);
+  });
+});
+
+describe('equityRiskPremium', () => {
+  it('CAPE 40 with 10Y TIPS 2.64% => ERP ~ −0.14% (equities pay less than real bonds)', () => {
+    expect(equityRiskPremium(40, 2.64)).toBeCloseTo(-0.14, 6);
+  });
+  it('CAPE metric is inverted: high CAPE => expensive', () => {
+    const [eq] = valuationScores([{ id: 'VAL_CAPE', pctRank: 0.95 }]);
+    expect(eq.cheapness).toBeCloseTo(0.05, 6);
   });
 });

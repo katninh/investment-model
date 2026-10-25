@@ -68,6 +68,7 @@ interface ValCfg {
 // ponytail: inline config; moves to config.ts (tunable) in Phase 4.
 const VAL_CONFIG: Record<string, ValCfg> = {
   VAL_BUFFETT: { asset: 'Equities', label: 'Buffett Indicator', highIsExpensive: true },
+  VAL_CAPE: { asset: 'Equities', label: 'Shiller CAPE', highIsExpensive: true },
   VAL_DOW_GOLD: { asset: 'Gold', label: 'Dow/Gold ratio', highIsExpensive: false }, // high = gold cheap vs stocks
   // Gold's real-rate input is now the regression residual (see goldRealYieldResidual),
   // injected via `extra` — NOT a naive DFII10 percentile (v5 errors log #1/#4/#5).
@@ -118,4 +119,11 @@ export function sjcPremium(sjcMvnd: number, xau: number, usdVnd: number): number
 // SJC level implied by an XAU level at a given premium (for playbook entry zones).
 export function sjcFromXau(xau: number, usdVnd: number, premium: number): number {
   return sjcParity(xau, usdVnd) * (1 + premium);
+}
+
+// --- Equity risk premium vs 10Y TIPS (v5 Pass 2.7) ---------------------------
+// Cyclically-adjusted earnings yield minus the real yield, both in %: what
+// equities pay over a risk-free real bond. Higher ERP = equities cheaper.
+export function equityRiskPremium(cape: number, realYield: number): number {
+  return 100 / cape - realYield;
 }
