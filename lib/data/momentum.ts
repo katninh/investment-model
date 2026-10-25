@@ -9,6 +9,8 @@ const ASSETS: Record<string, string> = {
   BTC: 'MKT_BTC',
   'S&P 500': 'FRED_SP500',
   Nasdaq: 'FRED_NASDAQCOM',
+  'Long UST (TLT)': 'MKT_TLT',
+  'Vietnam (VNM)': 'MKT_VNM',
 };
 
 export interface AssetMomentum {

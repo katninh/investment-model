@@ -4,13 +4,16 @@ import {
   SCENARIOS,
   scenarioProbabilities,
   expectedReturns,
+  goldScenarioTargets,
   type SignalSet,
   type ScenarioResult,
+  type GoldTargets,
 } from '@/lib/model/scenarios';
 
 export interface ScenariosResult {
   results: ScenarioResult[];
   ev: Record<string, number>;
+  goldTargets: GoldTargets | null; // null when gold spot is unavailable
   signals: SignalSet;
 }
 
@@ -26,10 +29,16 @@ export async function getScenarios(): Promise<ScenariosResult> {
     realRateZ: z('FRED_DFII10'),
     hySpreadZ: z('FRED_BAMLH0A0HYM2'),
     vixZ: z('FRED_VIXCLS'),
-    sahmZ: z('FRED_SAHMREALTIME'),
+    sahmLatest: byId.get('FRED_SAHMREALTIME')?.signal?.latest ?? 0,
     curveValue: byId.get('FRED_T10Y2Y')?.signal?.latest ?? 0,
   };
 
   const results = scenarioProbabilities(SCENARIOS, signals);
-  return { results, ev: expectedReturns(results), signals };
+  const goldSpot = byId.get('MKT_XAUUSD')?.signal?.latest ?? null;
+  return {
+    results,
+    ev: expectedReturns(results),
+    goldTargets: goldSpot != null ? goldScenarioTargets(results, goldSpot) : null,
+    signals,
+  };
 }

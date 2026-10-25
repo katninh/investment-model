@@ -18,9 +18,14 @@ from sources.coingecko import fetch_market_chart
 from sources.alternative_me import fetch_fng
 from sources.cnn import fetch_fear_greed
 from sources.bitcoin_data import fetch_mvrv
+from sources.cftc import fetch_cot_gold
+from sources.multpl import fetch_cape
 
 # Non-FRED indicator ownership (id -> provider symbol/param).
-TWELVEDATA_IDS = {"MKT_XAUUSD": "XAU/USD", "MKT_GLD": "GLD", "MKT_XLE": "XLE"}
+TWELVEDATA_IDS = {
+    "MKT_XAUUSD": "XAU/USD", "MKT_GLD": "GLD", "MKT_XLE": "XLE",
+    "MKT_TLT": "TLT", "MKT_TIP": "TIP", "MKT_VNM": "VNM", "MKT_USDVND": "USD/VND",
+}
 COINGECKO_IDS = {"MKT_BTC": "bitcoin"}
 
 
@@ -74,7 +79,7 @@ def collect_prices(conn, mode):
         o, e, _ = _run_series(conn, indicator_id, lambda s=symbol: fetch_time_series(s, api_key, outputsize))
         ok += o
         err += e
-        time.sleep(2)  # Twelve Data free tier ~8 credits/min
+        time.sleep(8)  # Twelve Data free tier: 8 credits/min
     return ok, err
 
 
@@ -103,6 +108,18 @@ def collect_sentiment(conn, mode):
 def collect_valuation(conn, mode):
     # BTC MVRV (bitcoin-data.com); free tier is delayed ~7 days.
     return _run_series(conn, "VAL_BTC_MVRV", fetch_mvrv)[:2]
+
+
+def collect_positioning(conn, mode):
+    # COT gold net spec. Current year normally; ~15y on full (matches the signal window).
+    this_year = date.today().year
+    years = range(this_year - 15, this_year + 1) if mode == "full" else [this_year]
+    return _run_series(conn, "SENT_COT_GOLD", lambda: fetch_cot_gold(years))[:2]
+
+
+def collect_cape(conn, mode):
+    # Whole table each time (one request); upsert makes it idempotent.
+    return _run_series(conn, "VAL_CAPE", fetch_cape, source_type="scraped")[:2]
 
 
 def _read_series(conn, indicator_id):
@@ -170,6 +187,8 @@ SOURCES = [
     ("sentiment", collect_sentiment, {"daily", "full"}),
     ("valuation", collect_valuation, {"daily", "full"}),
     ("derived", collect_derived, {"daily", "full"}),  # needs gold in DB (runs after prices)
+    ("positioning", collect_positioning, {"weekly", "full"}),  # COT out Friday → Saturday run
+    ("cape", collect_cape, {"monthly", "full"}),
 ]
 
 

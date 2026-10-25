@@ -11,7 +11,7 @@ function pctColor(x: number): string {
 }
 
 export default async function ScenariosPage() {
-  const { results, ev } = await getScenarios();
+  const { results, ev, goldTargets } = await getScenarios();
   const ranked = [...results].sort((a, b) => b.probability - a.probability);
 
   return (
@@ -32,6 +32,30 @@ export default async function ScenariosPage() {
           ))}
         </div>
       </Card>
+
+      {goldTargets ? (
+        <Card className="mt-6">
+          <div className="flex items-baseline justify-between">
+            <CardTitle className="text-sm">Gold 12m targets (spot × scenario return)</CardTitle>
+            <span className="text-lg font-bold tabular-nums text-gray-800 dark:text-white">
+              ${Math.round(goldTargets.weighted).toLocaleString()}
+              <span className="ml-1 text-xs font-normal text-gray-400">prob-weighted</span>
+            </span>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
+            {goldTargets.perScenario.map((g) => (
+              <div key={g.code}>
+                <div className="text-xs text-gray-400">
+                  {g.code} · {g.name} · {Math.round(g.probability * 100)}%
+                </div>
+                <div className="font-semibold tabular-nums text-gray-800 dark:text-white">
+                  ${Math.round(g.target).toLocaleString()}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      ) : null}
 
       <div className="mt-6 grid gap-6 sm:grid-cols-2">
         {ranked.map((r, i) => (
