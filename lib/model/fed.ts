@@ -77,3 +77,39 @@ export function fedReaction(p: FedParams): FedCall {
           : 'Policy roughly at the Taylor rule — hold',
   };
 }
+
+// --- Market view (v5: "dots vs market") --------------------------------------
+// What the MARKET prices, to set against what the rule says. Preferred source is
+// a CME FedWatch hike probability (entered manually on /data as FEDWATCH_HIKE —
+// FedWatch has no free API). Fallback: the 2Y Treasury vs EFFR spread, the
+// market's own priced path over ~2 years (a positive spread = hikes priced).
+export interface MarketFedView {
+  source: 'FedWatch' | '2Y−EFFR spread';
+  hikeProb: number; // 0..1
+  spreadBp: number | null; // 2Y − EFFR in bp (fallback only)
+  ruleMinusMarket: number; // Taylor hikeProb − market hikeProb (+ = rule more hawkish)
+}
+
+export function marketFedView(
+  rule: FedCall,
+  fedwatchHikePct: number | null, // fresh FedWatch reading in %, or null
+  dgs2: number | null,
+  effr: number,
+): MarketFedView | null {
+  let source: MarketFedView['source'];
+  let hikeProb: number;
+  let spreadBp: number | null = null;
+  if (fedwatchHikePct != null) {
+    source = 'FedWatch';
+    hikeProb = Math.min(1, Math.max(0, fedwatchHikePct / 100));
+  } else if (dgs2 != null) {
+    source = '2Y−EFFR spread';
+    spreadBp = (dgs2 - effr) * 100;
+    // ponytail: same logistic as the rule gap; 2Y carries term premium, so this
+    // is a direction-of-pricing proxy, not a per-meeting odds.
+    hikeProb = 1 / (1 + Math.exp(-LOGISTIC_K * (dgs2 - effr)));
+  } else {
+    return null;
+  }
+  return { source, hikeProb, spreadBp, ruleMinusMarket: rule.hikeProb - hikeProb };
+}

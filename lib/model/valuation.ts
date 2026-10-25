@@ -99,3 +99,23 @@ export function valuationScores(inputs: ValMetricInput[], extra: ExtraMetric[] =
     })
     .sort((a, b) => b.score - a.score); // cheapest first
 }
+
+// --- SJC premium (v5 Pass 2.7 / 3.12) ----------------------------------------
+// 1 lượng = 37.5 g = 1.2057 troy oz. World parity in million VND per lượng:
+//   parity = XAU(USD/oz) × USD/VND × 1.2057 / 1e6
+// SJC = parity × (1 + premium). The premium is a SEPARATE risk from world gold:
+// it compresses when the world price stabilises (v5 gold rules).
+export const OZ_PER_LUONG = 1.2057;
+
+export function sjcParity(xau: number, usdVnd: number): number {
+  return (xau * usdVnd * OZ_PER_LUONG) / 1e6;
+}
+
+export function sjcPremium(sjcMvnd: number, xau: number, usdVnd: number): number {
+  return sjcMvnd / sjcParity(xau, usdVnd) - 1;
+}
+
+// SJC level implied by an XAU level at a given premium (for playbook entry zones).
+export function sjcFromXau(xau: number, usdVnd: number, premium: number): number {
+  return sjcParity(xau, usdVnd) * (1 + premium);
+}

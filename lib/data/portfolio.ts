@@ -6,8 +6,10 @@ import { constructPortfolio, type Allocation } from '@/lib/model/portfolio';
 import { annualizedVol, portfolioCVaR, worstAnalog, type AnalogDrawdown } from '@/lib/model/risk';
 
 // Price series we can measure vol from directly; others fall back to a default.
-const VOL_SERIES: Record<string, string> = { equities: 'FRED_SP500', gold: 'MKT_XAUUSD', btc: 'MKT_BTC' };
-const DEFAULT_VOL: Record<string, number> = { bonds: 0.07, cash: 0.005 };
+// bonds vol from TLT (long UST) now that it's ingested; cash stays a constant.
+const VOL_SERIES: Record<string, string> = { equities: 'FRED_SP500', gold: 'MKT_XAUUSD', btc: 'MKT_BTC', bonds: 'MKT_TLT' };
+// Fallbacks so a missing series never collapses to the vol floor (= oversized weight).
+const DEFAULT_VOL: Record<string, number> = { equities: 0.16, gold: 0.15, btc: 0.6, bonds: 0.07, cash: 0.005 };
 
 export interface PortfolioData {
   allocations: Allocation[];
@@ -17,18 +19,19 @@ export interface PortfolioData {
 }
 
 export async function getPortfolio(): Promise<PortfolioData> {
-  const [{ results, regime }, scenarios, prices, settings] = await Promise.all([
+  const [{ results, regime }, scenarios, settings, ...prices] = await Promise.all([
     getConviction(),
     getScenarios(),
-    getAlignedDaily(Object.values(VOL_SERIES), 400),
     getSettings(),
+    // one query per series: an inner join would drop everything if one series is empty
+    ...Object.values(VOL_SERIES).map((id) => getAlignedDaily([id], 400)),
   ]);
 
   const vols: Record<string, number> = { ...DEFAULT_VOL };
-  for (const [asset, id] of Object.entries(VOL_SERIES)) {
-    const v = annualizedVol(prices.series[id] ?? []);
+  Object.entries(VOL_SERIES).forEach(([asset, id], i) => {
+    const v = annualizedVol(prices[i].series[id] ?? []);
     if (v > 0) vols[asset] = v;
-  }
+  });
 
   const allocations = constructPortfolio(results, settings.constraints, vols);
 

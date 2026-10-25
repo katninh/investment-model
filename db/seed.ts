@@ -16,6 +16,7 @@ const rows: Row[] = [
   { id: 'CB_LEI',            name: 'Conference Board LEI',     category: 'growth', sourceType: 'manual',  sourceId: null,           frequency: 'monthly',   higherBetter: true,  unit: 'index' },
   { id: 'FRED_BAMLH0A0HYM2', name: 'HY Credit Spreads',        category: 'growth', sourceType: 'api',     sourceId: 'BAMLH0A0HYM2', frequency: 'daily',     higherBetter: false, unit: '%' },
   { id: 'DERIV_COPPER_GOLD', name: 'Copper/Gold Ratio',        category: 'growth', sourceType: 'derived', sourceId: null,           frequency: 'daily',     higherBetter: true,  unit: 'ratio' },
+  { id: 'FRED_ICSA',         name: 'Initial Jobless Claims',   category: 'growth', sourceType: 'api',     sourceId: 'ICSA',         frequency: 'weekly',    higherBetter: false, unit: 'claims' },
 
   // ── Inflation ───────────────────────────────────────────────────────
   { id: 'FRED_CPIAUCSL',     name: 'CPI',                      category: 'inflation', sourceType: 'api', sourceId: 'CPIAUCSL',     frequency: 'monthly',   higherBetter: false, unit: 'index' },
@@ -24,9 +25,11 @@ const rows: Row[] = [
   { id: 'FRED_DFII10',       name: 'TIPS 10Y Real Yield',      category: 'inflation', sourceType: 'api', sourceId: 'DFII10',       frequency: 'daily',     higherBetter: null,  unit: '%' },
   { id: 'FRED_T5YIE',        name: '5Y Breakeven Inflation',   category: 'inflation', sourceType: 'api', sourceId: 'T5YIE',        frequency: 'daily',     higherBetter: false, unit: '%' },
   { id: 'FRED_MICH',         name: 'UMich Inflation Expect.',  category: 'inflation', sourceType: 'api', sourceId: 'MICH',         frequency: 'monthly',   higherBetter: false, unit: '%' },
+  { id: 'FRED_T10YIE',       name: '10Y Breakeven Inflation',  category: 'inflation', sourceType: 'api', sourceId: 'T10YIE',       frequency: 'daily',     higherBetter: false, unit: '%' },
 
   // ── Monetary ────────────────────────────────────────────────────────
   { id: 'FRED_FEDFUNDS',     name: 'Fed Funds Rate',           category: 'monetary', sourceType: 'api',    sourceId: 'FEDFUNDS',   frequency: 'monthly',   higherBetter: null,  unit: '%' },
+  { id: 'FRED_EFFR',         name: 'Effective Fed Funds (daily)', category: 'monetary', sourceType: 'api', sourceId: 'EFFR',     frequency: 'daily',     higherBetter: null,  unit: '%' },
   { id: 'FRED_M2SL',         name: 'M2 Money Supply',          category: 'monetary', sourceType: 'api',    sourceId: 'M2SL',       frequency: 'monthly',   higherBetter: true,  unit: 'USD bn' },
   { id: 'FRED_WALCL',        name: 'Fed Balance Sheet',        category: 'monetary', sourceType: 'api',    sourceId: 'WALCL',      frequency: 'weekly',    higherBetter: true,  unit: 'USD mn' },
   { id: 'FEDWATCH_HIKE',     name: 'CME FedWatch Hike Prob.',  category: 'monetary', sourceType: 'manual', sourceId: null,         frequency: 'weekly',    higherBetter: null,  unit: '%' },
@@ -43,8 +46,17 @@ const rows: Row[] = [
   { id: 'FRED_DGS2',         name: '2Y Treasury Yield',        category: 'market', sourceType: 'api', sourceId: 'DGS2',           frequency: 'daily', higherBetter: null,  unit: '%' },
   { id: 'FRED_DGS10',        name: '10Y Treasury Yield',       category: 'market', sourceType: 'api', sourceId: 'DGS10',          frequency: 'daily', higherBetter: null,  unit: '%' },
   { id: 'FRED_DGS30',        name: '30Y Treasury Yield',       category: 'market', sourceType: 'api', sourceId: 'DGS30',          frequency: 'daily', higherBetter: null,  unit: '%' },
+  { id: 'FRED_DFII30',       name: 'TIPS 30Y Real Yield',      category: 'market', sourceType: 'api', sourceId: 'DFII30',         frequency: 'daily', higherBetter: null,  unit: '%' },
+  { id: 'FRED_BAMLC0A0CM',   name: 'IG Credit Spreads',        category: 'market', sourceType: 'api', sourceId: 'BAMLC0A0CM',     frequency: 'daily', higherBetter: false, unit: '%' },
+  { id: 'FRED_DCOILBRENTEU', name: 'Brent Crude Oil',          category: 'market', sourceType: 'api', sourceId: 'DCOILBRENTEU',   frequency: 'daily', higherBetter: null,  unit: 'USD' },
   { id: 'MKT_GLD',           name: 'GLD (Gold ETF)',           category: 'market', sourceType: 'api', sourceId: 'GLD',            frequency: 'daily', higherBetter: true,  unit: 'USD' },
   { id: 'MKT_XLE',           name: 'XLE (Energy ETF)',         category: 'market', sourceType: 'api', sourceId: 'XLE',            frequency: 'daily', higherBetter: true,  unit: 'USD' },
+  { id: 'MKT_TLT',           name: 'TLT (Long UST ETF)',       category: 'market', sourceType: 'api', sourceId: 'TLT',            frequency: 'daily', higherBetter: true,  unit: 'USD' },
+  { id: 'MKT_TIP',           name: 'TIP (TIPS ETF)',           category: 'market', sourceType: 'api', sourceId: 'TIP',            frequency: 'daily', higherBetter: true,  unit: 'USD' },
+  { id: 'MKT_VNM',           name: 'VNM (Vietnam Equity ETF)', category: 'market', sourceType: 'api', sourceId: 'VNM',            frequency: 'daily', higherBetter: true,  unit: 'USD' },
+  { id: 'MKT_USDVND',        name: 'USD/VND',                  category: 'market', sourceType: 'api', sourceId: 'USD/VND',        frequency: 'daily', higherBetter: null,  unit: 'VND' },
+  // SJC sits behind bot protection — entered manually on /data (sell price, HCMC).
+  { id: 'MANUAL_SJC_SELL',   name: 'SJC Gold Bar (sell, HCMC)', category: 'market', sourceType: 'manual', sourceId: null,          frequency: 'daily', higherBetter: null,  unit: 'M VND/lượng' },
 
   // ── Valuation ───────────────────────────────────────────────────────
   { id: 'VAL_BUFFETT',       name: 'Buffett Indicator',        category: 'valuation', sourceType: 'derived', sourceId: null,      frequency: 'quarterly', higherBetter: false, unit: '%' },

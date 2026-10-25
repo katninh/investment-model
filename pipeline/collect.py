@@ -20,7 +20,10 @@ from sources.cnn import fetch_fear_greed
 from sources.bitcoin_data import fetch_mvrv
 
 # Non-FRED indicator ownership (id -> provider symbol/param).
-TWELVEDATA_IDS = {"MKT_XAUUSD": "XAU/USD", "MKT_GLD": "GLD", "MKT_XLE": "XLE"}
+TWELVEDATA_IDS = {
+    "MKT_XAUUSD": "XAU/USD", "MKT_GLD": "GLD", "MKT_XLE": "XLE",
+    "MKT_TLT": "TLT", "MKT_TIP": "TIP", "MKT_VNM": "VNM", "MKT_USDVND": "USD/VND",
+}
 COINGECKO_IDS = {"MKT_BTC": "bitcoin"}
 
 
@@ -74,7 +77,7 @@ def collect_prices(conn, mode):
         o, e, _ = _run_series(conn, indicator_id, lambda s=symbol: fetch_time_series(s, api_key, outputsize))
         ok += o
         err += e
-        time.sleep(2)  # Twelve Data free tier ~8 credits/min
+        time.sleep(8)  # Twelve Data free tier: 8 credits/min
     return ok, err
 
 

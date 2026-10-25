@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { valuationScores, goldRealYieldResidual } from './valuation';
+import { valuationScores, goldRealYieldResidual, sjcParity, sjcPremium, sjcFromXau } from './valuation';
 
 describe('valuationScores', () => {
   it('high Buffett (expensive) => low equities score (near 1)', () => {
@@ -61,5 +61,19 @@ describe('goldRealYieldResidual', () => {
 
   it('too little history => neutral', () => {
     expect(goldRealYieldResidual([100], [2])).toMatchObject({ cheapness: 0.5, n: 1 });
+  });
+});
+
+
+describe('SJC premium (v5 formula: SJC = XAU × USD/VND × 1.2057 × (1+p) / 1e6)', () => {
+  it('reproduces the v5 baseline (~8% over parity)', () => {
+    // XAU ~4,125, USD/VND ~26,400, SJC sell 142.6M VND/lượng
+    expect(sjcParity(4125, 26400)).toBeCloseTo(131.3, 1);
+    expect(sjcPremium(142.6, 4125, 26400)).toBeCloseTo(0.086, 3);
+  });
+
+  it('sjcFromXau inverts sjcPremium', () => {
+    const p = sjcPremium(142.6, 4125, 26400);
+    expect(sjcFromXau(4125, 26400, p)).toBeCloseTo(142.6, 6);
   });
 });
