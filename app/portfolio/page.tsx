@@ -15,14 +15,14 @@ const ASSET_HEX: Record<string, string> = {
 };
 
 export default async function PortfolioPage() {
-  const { allocations, regime } = await getPortfolio();
+  const { allocations, regime, cvar95, vol, worstAnalog } = await getPortfolio();
   const funded = allocations.filter((a) => a.weight > 0.0005);
 
   return (
     <div className="animate-fade-up mx-auto max-w-4xl p-4 sm:p-6">
       <PageHeader
         title="Portfolio"
-        description={`Layer 5 · target allocation from conviction · regime: ${regime} · max 35%/asset, min 10% cash`}
+        description={`Layer 5 · risk-parity base tilted by conviction · regime: ${regime} · max 35%/asset, min 10% cash`}
       />
 
       <div className="grid gap-6 lg:grid-cols-5">
@@ -64,6 +64,29 @@ export default async function PortfolioPage() {
               </tbody>
             </table>
           </div>
+        </Card>
+      </div>
+
+      <div className="mt-6 grid gap-6 sm:grid-cols-2">
+        <Card>
+          <CardTitle className="text-sm">Expected CVaR (95%)</CardTitle>
+          <div className={`mt-2 text-2xl font-bold tabular-nums ${cvar95 < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-800 dark:text-white'}`}>
+            {cvar95 >= 0 ? '+' : ''}
+            {(cvar95 * 100).toFixed(1)}%
+          </div>
+          <p className="mt-1 text-xs text-gray-400">
+            Mean 12m return in the worst 5% of outcomes: the scenario mix, each scenario spread by the
+            portfolio&apos;s {(vol * 100).toFixed(1)}% vol (ρ = 0.3 between assets).
+          </p>
+        </Card>
+        <Card>
+          <CardTitle className="text-sm">Worst analog drawdown</CardTitle>
+          <div className="mt-2 text-2xl font-bold tabular-nums text-red-600 dark:text-red-400">
+            {(worstAnalog.drawdown * 100).toFixed(1)}%
+          </div>
+          <p className="mt-1 text-xs text-gray-400">
+            {worstAnalog.analog} — this allocation under that episode&apos;s per-asset shocks (1980–82, 2008, 2013, 2022 tested).
+          </p>
         </Card>
       </div>
 

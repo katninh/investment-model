@@ -1,4 +1,5 @@
 import { getValuation } from '@/lib/data/valuation';
+import { sjcFromXau } from '@/lib/model/valuation';
 import { Card, CardTitle, PageHeader } from '@/components/ui';
 import { RadialGauge } from '@/components/charts/RadialGauge';
 
@@ -11,11 +12,11 @@ function gaugeColor(score: number): string {
 }
 
 export default async function ValuationPage() {
-  const { assets } = await getValuation();
+  const { assets, goldResidualZ, erp, sjc } = await getValuation();
 
   return (
     <div className="animate-fade-up mx-auto max-w-5xl p-4 sm:p-6">
-      <PageHeader title="Valuation" description="Percentile valuation (Model 2) · 1–10, 10 = cheapest" />
+      <PageHeader title="Valuation" description="Model 2 · 1–10, 10 = cheapest · gold anchored to the 10Y real yield" />
 
       {assets.length === 0 ? (
         <Card>
@@ -48,9 +49,52 @@ export default async function ValuationPage() {
         </div>
       )}
 
+      <Card className="mt-6">
+        <CardTitle className="mb-1">SJC gold premium (Vietnam)</CardTitle>
+        {sjc ? (
+          <div className="mt-3 grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
+            <div>
+              <div className="text-xs text-gray-400">Premium over world parity</div>
+              <div className="text-lg font-bold tabular-nums text-gray-800 dark:text-white">
+                {(sjc.premium * 100).toFixed(1)}%
+              </div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-400">Premium z-score</div>
+              <div className="text-lg font-bold tabular-nums text-gray-800 dark:text-white">
+                {sjc.z != null ? sjc.z.toFixed(2) : '—'}
+              </div>
+              {sjc.z == null ? <div className="text-xs text-gray-400">needs ≥3 same-day entries ({sjc.n})</div> : null}
+            </div>
+            <div>
+              <div className="text-xs text-gray-400">USD/VND</div>
+              <div className="text-lg font-bold tabular-nums text-gray-800 dark:text-white">
+                {Math.round(sjc.usdVnd).toLocaleString()}
+              </div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-400">SJC at XAU $4,000 (same premium)</div>
+              <div className="text-lg font-bold tabular-nums text-gray-800 dark:text-white">
+                {sjcFromXau(4000, sjc.usdVnd, sjc.premium).toFixed(1)}M
+              </div>
+            </div>
+          </div>
+        ) : (
+          <p className="mt-2 text-sm text-gray-500">
+            Enter today&apos;s SJC sell price (million VND/lượng) on /data — sjc.com.vn has no open API.
+          </p>
+        )}
+        <p className="mt-3 text-xs text-gray-400">
+          SJC = XAU × USD/VND × 1.2057 × (1 + premium) / 1e6. The premium is a separate risk: it compresses
+          when the world price stabilises.
+        </p>
+      </Card>
+
       <p className="mt-6 text-xs text-gray-400">
-        Equities uses a Buffett proxy (Fed Z.1 corporate equities / GDP); Shiller CAPE and the Fed
-        Model have no free source and are omitted.
+        Gold&apos;s real-rate metric is the residual of ln(gold) regressed on the 10Y TIPS yield (current
+        z {goldResidualZ.toFixed(2)}; + = rich vs real rates).{' '}
+        Equities blends a Buffett proxy (Fed Z.1 corporate equities / GDP), Shiller CAPE (multpl.com) and
+        the equity risk premium vs 10Y TIPS{erp != null ? ` (now ${erp.toFixed(2)}%)` : ''} = 100/CAPE − real yield.
       </p>
     </div>
   );

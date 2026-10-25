@@ -15,7 +15,7 @@ const rows: Row[] = [
   { id: 'ISM_SVC',           name: 'ISM Services PMI',         category: 'growth', sourceType: 'manual',  sourceId: null,           frequency: 'monthly',   higherBetter: true,  unit: 'index' },
   { id: 'CB_LEI',            name: 'Conference Board LEI',     category: 'growth', sourceType: 'manual',  sourceId: null,           frequency: 'monthly',   higherBetter: true,  unit: 'index' },
   { id: 'FRED_BAMLH0A0HYM2', name: 'HY Credit Spreads',        category: 'growth', sourceType: 'api',     sourceId: 'BAMLH0A0HYM2', frequency: 'daily',     higherBetter: false, unit: '%' },
-  { id: 'DERIV_COPPER_GOLD', name: 'Copper/Gold Ratio',        category: 'growth', sourceType: 'derived', sourceId: null,           frequency: 'daily',     higherBetter: true,  unit: 'ratio' },
+  { id: 'DERIV_COPPER_GOLD', name: 'Copper/Gold Ratio',        category: 'growth', sourceType: 'derived', sourceId: null,           frequency: 'monthly',   higherBetter: true,  unit: 'ratio' }, // copper input is monthly
   { id: 'FRED_ICSA',         name: 'Initial Jobless Claims',   category: 'growth', sourceType: 'api',     sourceId: 'ICSA',         frequency: 'weekly',    higherBetter: false, unit: 'claims' },
 
   // ── Inflation ───────────────────────────────────────────────────────

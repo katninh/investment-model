@@ -31,9 +31,11 @@ interface RawRow {
 // Days past the last observation's REFERENCE date before it counts as stale (v5:
 // ">1 release old"). Sources date data at the start of the period and publish later
 // (Sep UNRATE is dated 09-01, out 2 Oct; FRED oil/dollar lag ~1wk; GDP ~1mo after
-// quarter end), so each threshold = period + publication lag + slack. The old
-// 4/10/45/120 flagged current data stale — and sentiment down-weights stale inputs.
-const STALE_DAYS: Record<string, number> = { daily: 10, weekly: 17, monthly: 70, quarterly: 200 };
+// quarter end), so each threshold = period + publication lag + slack. Monthly/quarterly
+// are sized for the slowest regular releasers (PCE/M2 ~4wks after month end, GDP advance
+// ~4wks after quarter end). The old 4/10/45/120 flagged current data stale — and
+// sentiment down-weights stale inputs.
+const STALE_DAYS: Record<string, number> = { daily: 10, weekly: 17, monthly: 95, quarterly: 220 };
 
 function toISODate(d: Date | string | null): string | null {
   if (d == null) return null;

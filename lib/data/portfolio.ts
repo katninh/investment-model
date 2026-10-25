@@ -3,7 +3,7 @@ import { getScenarios } from './scenarios';
 import { getAlignedDaily } from './series';
 import { getSettings } from './config';
 import { constructPortfolio, type Allocation } from '@/lib/model/portfolio';
-import { annualizedVol, portfolioCVaR, worstAnalog, type AnalogDrawdown } from '@/lib/model/risk';
+import { annualizedVol, mixtureCVaR, portfolioVol, worstAnalog, type AnalogDrawdown } from '@/lib/model/risk';
 
 // Price series we can measure vol from directly; others fall back to a default.
 // bonds vol from TLT (long UST) now that it's ingested; cash stays a constant.
@@ -14,7 +14,8 @@ const DEFAULT_VOL: Record<string, number> = { equities: 0.16, gold: 0.15, btc: 0
 export interface PortfolioData {
   allocations: Allocation[];
   regime: string;
-  cvar95: number; // worst-5% tail of the scenario return distribution (decimal, negative)
+  cvar95: number; // mean 12m return in the worst 5% of outcomes (decimal; negative = loss)
+  vol: number; // portfolio 12m vol used for the within-scenario spread
   worstAnalog: AnalogDrawdown; // worst historical-analog drawdown (decimal, negative)
 }
 
@@ -42,10 +43,13 @@ export async function getPortfolio(): Promise<PortfolioData> {
     ret: Object.entries(sc.assetReturns).reduce((s, [asset, r]) => s + (wByAsset[asset] ?? 0) * (r / 100), 0),
   }));
 
+  const sigma = portfolioVol(wByAsset, vols);
+
   return {
     allocations,
     regime,
-    cvar95: portfolioCVaR(dist, 0.05),
+    cvar95: mixtureCVaR(dist, sigma, 0.05),
+    vol: sigma,
     worstAnalog: worstAnalog(wByAsset),
   };
 }

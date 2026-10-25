@@ -1,11 +1,12 @@
 import { getDataStatus } from '@/lib/data/dataStatus';
+import { getIntegrity } from '@/lib/data/integrity';
 import { Card, CardTitle, PageHeader, Badge } from '@/components/ui';
 import { ManualEntryForm } from '@/components/ManualEntryForm';
 
 export const dynamic = 'force-dynamic';
 
 export default async function DataStatusPage() {
-  const { rows, ingestion } = await getDataStatus();
+  const [{ rows, ingestion }, integrity] = await Promise.all([getDataStatus(), getIntegrity()]);
   const manual = rows.filter((r) => r.sourceType === 'manual' || r.sourceType === 'scraped');
   const today = new Date().toISOString().slice(0, 10);
   const staleCount = rows.filter((r) => r.stale && r.lastDate).length;
@@ -17,6 +18,50 @@ export default async function DataStatusPage() {
         title="Data Status"
         description={`${liveCount}/${rows.length} live · ${staleCount} stale · manual entry for no-API indicators`}
       />
+
+      {/* v5 Pass 0 — errors-log checks, run every time */}
+      <Card className="mb-6">
+        <CardTitle className="mb-1">Integrity checks (v5 Pass 0)</CardTitle>
+        <p className="mb-4 text-xs text-gray-400">The three 2026 errors, encoded as hard checks.</p>
+        <ul className="space-y-2.5 text-sm">
+          <li className="flex items-start justify-between gap-4">
+            <span className="text-gray-600 dark:text-gray-300">
+              Real rate = observed 10Y TIPS (never nominal − CPI)
+              <span className="block text-xs text-gray-400">{integrity.realRate.reason}</span>
+            </span>
+            <Badge variant={integrity.realRate.ok ? 'success' : 'error'}>
+              {integrity.realRate.value != null ? `${integrity.realRate.value.toFixed(2)}%` : 'missing'}
+            </Badge>
+          </li>
+          <li className="flex items-start justify-between gap-4">
+            <span className="text-gray-600 dark:text-gray-300">
+              Sahm rule (fires at ≥ 0.50pp)
+              <span className="block text-xs text-gray-400">{integrity.sahm?.note ?? 'no Sahm data'}</span>
+            </span>
+            <Badge variant={integrity.sahm?.triggered ? 'error' : 'success'}>
+              {integrity.sahm ? `${integrity.sahm.value.toFixed(2)} · ${integrity.sahm.band}` : '—'}
+            </Badge>
+          </li>
+          {integrity.goldDrivers.map((d) => (
+            <li key={d.driver} className="flex items-start justify-between gap-4">
+              <span className="text-gray-600 dark:text-gray-300">
+                60-day sign: {d.driver === 'gold~oil' ? `gold vs ${integrity.oilSeries === 'FRED_DCOILBRENTEU' ? 'Brent' : 'WTI'}` : 'gold vs 10Y real yield'} (expect −)
+                <span className="block text-xs text-gray-400">{d.note}</span>
+              </span>
+              <Badge variant={d.agrees ? 'success' : 'warning'}>corr {d.corr.toFixed(2)}</Badge>
+            </li>
+          ))}
+          <li className="flex items-start justify-between gap-4">
+            <span className="text-gray-600 dark:text-gray-300">
+              Stale API series (past their cadence)
+              {integrity.stale.length > 0 ? (
+                <span className="block text-xs text-gray-400">{integrity.stale.map((s) => s.name).join(', ')}</span>
+              ) : null}
+            </span>
+            <Badge variant={integrity.stale.length ? 'warning' : 'success'}>{integrity.stale.length}</Badge>
+          </li>
+        </ul>
+      </Card>
 
       {/* ingestion health */}
       <Card className="!p-0">

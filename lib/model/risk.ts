@@ -32,6 +32,51 @@ export function portfolioCVaR(dist: { prob: number; ret: number }[], alpha = 0.0
   return acc > 0 ? wsum / acc : sorted[0].ret;
 }
 
+// --- CVaR of a scenario MIXTURE ---------------------------------------------
+// Point scenarios have no spread inside them, so a portfolio positive in every
+// scenario shows a "gain" in its worst 5% — understating tail risk. Treat each
+// scenario as Normal(μ_s, σ) with σ = the portfolio's 12m vol, then solve the
+// mixture's 5% quantile exactly (closed-form tail mean per normal component).
+
+// Standard normal CDF via erf (Abramowitz & Stegun 7.1.26, |err| < 1.5e-7).
+function normCdf(z: number): number {
+  const t = 1 / (1 + 0.3275911 * (Math.abs(z) / Math.SQRT2));
+  const y = 1 - ((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-(z * z) / 2);
+  return z >= 0 ? 0.5 * (1 + y) : 0.5 * (1 - y);
+}
+const normPdf = (z: number) => Math.exp(-(z * z) / 2) / Math.sqrt(2 * Math.PI);
+
+// Portfolio vol from per-asset vols with one constant pairwise correlation.
+// ponytail: constant rho; a measured correlation matrix is the upgrade.
+export function portfolioVol(weights: Record<string, number>, vols: Record<string, number>, rho = 0.3): number {
+  const legs = Object.entries(weights).map(([a, w]) => w * (vols[a] ?? 0));
+  const sum = legs.reduce((s, x) => s + x, 0);
+  const sumSq = legs.reduce((s, x) => s + x * x, 0);
+  // Σw²σ² + ρ·Σ_{i≠j} wᵢwⱼσᵢσⱼ  =  (1−ρ)·Σ(wσ)² + ρ·(Σwσ)²
+  return Math.sqrt(Math.max(0, (1 - rho) * sumSq + rho * sum * sum));
+}
+
+export function mixtureCVaR(dist: { prob: number; ret: number }[], sigma: number, alpha = 0.05): number {
+  if (dist.length === 0) return 0;
+  if (sigma <= 0) return portfolioCVaR(dist, alpha);
+  const cdf = (v: number) => dist.reduce((s, d) => s + d.prob * normCdf((v - d.ret) / sigma), 0);
+  // bisection for the alpha-quantile (VaR)
+  let lo = Math.min(...dist.map((d) => d.ret)) - 8 * sigma;
+  let hi = Math.max(...dist.map((d) => d.ret)) + 8 * sigma;
+  for (let i = 0; i < 100; i++) {
+    const mid = (lo + hi) / 2;
+    if (cdf(mid) < alpha) lo = mid;
+    else hi = mid;
+  }
+  const v = (lo + hi) / 2;
+  // E[X; X ≤ v] for N(μ,σ) = μΦ(z) − σφ(z)
+  const tail = dist.reduce((s, d) => {
+    const z = (v - d.ret) / sigma;
+    return s + d.prob * (d.ret * normCdf(z) - sigma * normPdf(z));
+  }, 0);
+  return tail / alpha;
+}
+
 // Per-asset shocks observed in the stress analogs v5 names. Rough, documented
 // constants — the point is a worst-case drawdown bound, not precise history.
 // ponytail: illustrative shocks; refine from actual analog return series later.
